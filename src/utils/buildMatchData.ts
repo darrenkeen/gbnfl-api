@@ -110,7 +110,7 @@ export const buildMatchData = (data: MatchData) => {
 
   return {
     teams: groups,
-    playerCount: players[0].teamCount,
+    playerCount: players[0].playerCount,
     mode: players[0].mode,
     duration: players[0].duration,
     utcStartSeconds: players[0].utcStartSeconds,
