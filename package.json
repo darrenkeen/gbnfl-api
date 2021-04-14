@@ -1,6 +1,6 @@
 {
    "name": "gbnfl",
-   "version": "2.0.9",
+   "version": "2.0.10",
    "description": "The GBNFL.",
    "devDependencies": {
       "@types/apicache": "~1.2.2",

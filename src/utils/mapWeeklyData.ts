@@ -22,12 +22,16 @@ export const mapWeeklyData = async (player: Partial<Player>) => {
           [modeName]: {
             kills: modeKills,
             deaths: modeDeaths,
-            kdRatio: Number((modeKills / modeDeaths).toFixed(2)),
+            kdRatio: Number(
+              (modeKills / (modeDeaths === 0 ? 1 : modeDeaths)).toFixed(2)
+            ),
           },
           all: {
             kills: allKills,
             deaths: allDeaths,
-            kdRatio: Number((allKills / allDeaths).toFixed(2)),
+            kdRatio: Number(
+              (allKills / (allDeaths === 0 ? 1 : allDeaths)).toFixed(2)
+            ),
           },
         };
         return total;

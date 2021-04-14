@@ -5,13 +5,8 @@ import { json, NextFunction, Request, Response, Router } from 'express';
 
 import { logger } from './logger';
 
-/**
- * Init Express middleware
- *
- * @param {Router} router
- * @returns {void}
- */
 const allowedOrigins = ['https://gbnfl-git-develop-darrenkeen1.vercel.app'];
+
 export function registerMiddleware(router: Router): void {
   router.use(json());
   router.use(compression());
@@ -19,8 +14,6 @@ export function registerMiddleware(router: Router): void {
     cors({
       credentials: true,
       origin: function (origin, callback) {
-        // allow requests with no origin
-        // (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
         if (
           allowedOrigins.indexOf(origin) === -1 &&
@@ -36,7 +29,6 @@ export function registerMiddleware(router: Router): void {
     })
   );
 
-  // Log incoming requests
   router.use((req: Request, _: Response, next: NextFunction) => {
     if (process.env.NODE_ENV !== 'test') {
       const ip: string | string[] | undefined =
