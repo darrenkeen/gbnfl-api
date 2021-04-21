@@ -36,7 +36,7 @@ export const mapWeeklyData = async (player: Partial<Player>) => {
         };
         return total;
       },
-      { all: { kills: 0, deaths: 0, kd: 0 } } as any
+      { all: { kills: 0, deaths: 0, kdRatio: 0 } } as any
     );
 
   return KD;
