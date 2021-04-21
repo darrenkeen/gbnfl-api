@@ -254,8 +254,6 @@ const trackMatch = async (_: Request, res: Response) => {
                 throw new Error(`No player with ${uno} uno.`);
               }
 
-              console.log(player[0]);
-
               await tm.query(
                 `
                   insert into "trophies" ("id", "name", "matchId")
