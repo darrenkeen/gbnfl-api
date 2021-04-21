@@ -46,7 +46,7 @@ const trackMatch = async (_: Request, res: Response) => {
           player.platformType
         );
         latestPlayerData.matches.forEach((match: any) => {
-          if (match.playerStats.teamPlacement === 3) {
+          if (match.playerStats.teamPlacement === 1) {
             if (!Object.keys(winMatches).includes(match.matchID)) {
               winMatches[match.matchID] = {
                 unos: [match.player.uno],
@@ -63,10 +63,59 @@ const trackMatch = async (_: Request, res: Response) => {
     );
   } catch (e) {
     console.error(e);
-    res.status(400).json({ error: e });
   }
 
-  console.log('winMatches', winMatches);
+  // const winMatchesForce: Record<string, { unos: string[] }> = {
+  //   '1539442300308939654': {
+  //     unos: ['12670946'],
+  //   },
+  //   '9069969306074646909': {
+  //     unos: ['12670946', '8457816366480952913'],
+  //   },
+  //   '14241801348241998732': {
+  //     unos: ['12670946'],
+  //   },
+  //   '871928445402018305': {
+  //     unos: ['8457816366480952913', '16922996'],
+  //   },
+  //   '10759175741790521369': {
+  //     unos: ['12670946'],
+  //   },
+  //   '465090429513817772': {
+  //     unos: ['12670946', '8457816366480952913', '16922996'],
+  //   },
+  //   '765168108982760248': {
+  //     unos: [
+  //       '12670946',
+  //       '8457816366480952913',
+  //       '16110194213510557660',
+  //       '16922996',
+  //     ],
+  //   },
+  //   '8275604190462253818': {
+  //     unos: [
+  //       '12670946',
+  //       '3099560545423409788',
+  //       '8457816366480952913',
+  //       '16922996',
+  //     ],
+  //   },
+  //   '15069177703941863679': {
+  //     unos: ['12670946', '16922996'],
+  //   },
+  //   '9092382647468265237': {
+  //     unos: ['12670946', '8457816366480952913', '16922996'],
+  //   },
+  //   '2215523308505910716': {
+  //     unos: ['3099560545423409788'],
+  //   },
+  //   '6849636118335289589': {
+  //     unos: ['8457816366480952913', '16922996'],
+  //   },
+  //   '9609466009987422534': {
+  //     unos: ['12670946'],
+  //   },
+  // };
 
   // Get match Data for each Win
   const winData: Record<
@@ -190,7 +239,6 @@ const trackMatch = async (_: Request, res: Response) => {
               );
             })
           );
-          // TODO: How to get existing matches in and trophies added ??
 
           await Promise.all(
             unos.map(async (uno: string) => {
@@ -230,7 +278,7 @@ const trackMatch = async (_: Request, res: Response) => {
 
 const router = Router();
 
-router.get('/:pass', auth, trackMatch);
+router.get('/track-match', auth, trackMatch);
 router.get('/', getMatches);
 
 export default router;
