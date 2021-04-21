@@ -91,7 +91,7 @@ const getMatchData = async (req: Request, res: Response) => {
       .get(
         `https://www.callofduty.com/api/papi-client/crm/cod/v2/title/mw/platform/battle/fullMatch/wz/${matchId}/en`
       )
-      .then((r) => buildMatchData(r.data))
+      .then((r) => buildMatchData(r.data.data))
       .then((data) => res.json(buildResponse(res, data)));
   } catch (e) {
     logger.error(e);
@@ -99,20 +99,9 @@ const getMatchData = async (req: Request, res: Response) => {
   }
 };
 
-const testing = async (req: Request, res: Response) => {
-  const { playerId, platform, start, end } = req.params;
+const testing = async (_: Request, res: Response) => {
   try {
-    const data = await API.MWcombatwzdate(playerId, start, end, platform);
-    if (data.matches?.length < 1) {
-      return res.status(500).json({ error: 'No matches' });
-    }
-    return res.json({
-      length: data.matches.length,
-      firstMatchTime: new Date(data.matches[0].utcStartSeconds * 1000),
-      lastMatchTime: new Date(
-        data.matches[data.matches.length - 1].utcStartSeconds * 1000
-      ),
-    });
+    return res.json();
   } catch (e) {
     console.error(e);
     return res.status(400).json({ error: e });
@@ -148,6 +137,6 @@ router.get(
   cacheTimestamp,
   getMatchData
 );
-router.get('/testing/:playerId/:platform/start/:start/end/:end', auth, testing);
+router.get('/testing', auth, testing);
 
 export default router;

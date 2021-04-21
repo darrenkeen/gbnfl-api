@@ -19,7 +19,10 @@ export class Player extends Entity {
   @Column({ default: '' })
   platformId: string;
 
-  @Column({ default: 'psn' })
+  @Column({ nullable: true })
+  uno: string;
+
+  @Column()
   platformType: string;
 
   @OneToMany(() => Trophy, (trophy) => trophy.player, {

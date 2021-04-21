@@ -1,3 +1,4 @@
+import { SEASON_START_END } from '../constants';
 import { Player } from '../entities/Player';
 
 export const getPlayerData = (player: Player, season: number | string) => {
@@ -5,25 +6,26 @@ export const getPlayerData = (player: Player, season: number | string) => {
     name: player.name,
     platformId: player.platformId,
     platformType: player.platformType,
-    sbmmUrl: player.sbmmUrl,
-    totalKills: 0,
+    uno: player.uno,
     trophyCount: 0,
-    unapprovedCount: 0,
   };
   const trophies =
     season === 'all'
       ? player.trophies
-      : player.trophies.filter(
-          (trophy) => trophy.game.season === Number(season)
-        );
-  const approvedTrophies = trophies.filter((trophy) => trophy.approved);
-  playerData.totalKills = approvedTrophies.reduce((acc, curr) => {
-    return acc + curr.kills;
-  }, 0);
-  playerData.trophyCount = approvedTrophies.length;
-  playerData.unapprovedCount = trophies.filter(
-    (trophy) => !trophy.approved
-  ).length;
-
+      : player.trophies.filter((trophy) => {
+          let isSeason = false;
+          for (const key in SEASON_START_END) {
+            const { start, end } = SEASON_START_END[key];
+            if (
+              trophy.match.utcStartSeconds * 1000 > start &&
+              trophy.match.utcStartSeconds * 1000 < end
+            ) {
+              isSeason = true;
+              break;
+            }
+          }
+          return isSeason;
+        });
+  playerData.trophyCount = trophies.length;
   return playerData;
 };

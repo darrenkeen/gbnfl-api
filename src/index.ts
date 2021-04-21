@@ -21,7 +21,7 @@ dotenv.config();
       url: process.env.DATABASE_URL,
       logging: true,
       schema: 'public',
-      // synchronize: true,
+      synchronize: true,
       entities: [path.join(__dirname, './entities/*')],
       migrations: [path.join(__dirname, './migrations/*')],
     });
