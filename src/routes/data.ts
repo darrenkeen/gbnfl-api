@@ -8,7 +8,12 @@ import cacheTimestamp from '../middleware/cacheTimestamp';
 import { buildResponse } from '../utils/buildResponse';
 import { mapWeeklyData } from '../utils/mapWeeklyData';
 import { buildMatchData } from '../utils/buildMatchData';
+import { SEASON_START_END } from '../constants';
 const API = require('call-of-duty-api')();
+
+const getAvailableSeasons = (_: Request, res: Response) => {
+  return res.json({ data: SEASON_START_END });
+};
 
 const getLatestData = async (req: Request, res: Response) => {
   const { playerId, platform } = req.params;
@@ -137,6 +142,7 @@ router.get(
   cacheTimestamp,
   getMatchData
 );
+router.get('/seasons', getAvailableSeasons);
 router.get('/testing', auth, testing);
 
 export default router;

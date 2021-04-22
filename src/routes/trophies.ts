@@ -1,4 +1,5 @@
 import { Request, Response, Router } from 'express';
+import { SEASON_START_END } from '../constants';
 import { Player } from '../entities/Player';
 import { Trophy } from '../entities/Trophy';
 import { getPlayerData } from '../utils/getPlayerData';
@@ -19,6 +20,9 @@ const getTrophies = async (_: Request, res: Response) => {
 const getTrophiesBySeasonForPlayers = async (req: Request, res: Response) => {
   const { season } = req.params;
   const data: any[] = [];
+  if (!SEASON_START_END[season]) {
+    return res.status(400).json({ error: 'Season not valid' });
+  }
   try {
     const players = await Player.find({
       relations: ['trophies', 'trophies.match'],

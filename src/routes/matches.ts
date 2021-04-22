@@ -1,5 +1,5 @@
 import { Request, Response, Router } from 'express';
-import { getConnection, IsNull, Not } from 'typeorm';
+import { Between, getConnection, IsNull, Not } from 'typeorm';
 import { nanoid } from 'nanoid';
 
 import { MatchData } from '../entities/MatchData';
@@ -7,12 +7,35 @@ import { Player } from '../entities/Player';
 import auth from '../middleware/auth';
 import { buildMatchData } from '../utils/buildMatchData';
 import { getMissionStats } from '../utils/getMissionStats';
+import { SEASON_START_END, TROPHY_MODES } from '../constants';
+import cache from '../middleware/cache';
+import { logger } from '../config/logger';
 
 const API = require('call-of-duty-api')();
 
 const getMatches = async (_: Request, res: Response) => {
   try {
     const matchData = await MatchData.find({
+      relations: ['trophies', 'trophies.player', 'teams', 'teams.players'],
+    });
+    return res.json({ data: matchData });
+  } catch (e) {
+    console.error(e);
+    return res.send(500).json({ error: e });
+  }
+};
+
+const getMatchesBySeason = async (req: Request, res: Response) => {
+  const { season } = req.params;
+  if (!SEASON_START_END[season]) {
+    console.error(`Season ${season} doesn't exist`);
+    return res.status(404).json({ error: `Season ${season} doesn't exist` });
+  }
+  try {
+    const { start, end } = SEASON_START_END[season];
+
+    const matchData = await MatchData.find({
+      where: { utcStartSeconds: Between(start / 1000, end / 1000) },
       relations: ['trophies', 'trophies.player', 'teams', 'teams.players'],
     });
     return res.json({ data: matchData });
@@ -46,7 +69,10 @@ const trackMatch = async (_: Request, res: Response) => {
           player.platformType
         );
         latestPlayerData.matches.forEach((match: any) => {
-          if (match.playerStats.teamPlacement === 1) {
+          if (
+            match.playerStats.teamPlacement === 1 &&
+            TROPHY_MODES.includes(match.mode)
+          ) {
             if (!Object.keys(winMatches).includes(match.matchID)) {
               winMatches[match.matchID] = {
                 unos: [match.player.uno],
@@ -267,6 +293,7 @@ const trackMatch = async (_: Request, res: Response) => {
         return res.json({ message: 'success' });
       })
     );
+    logger.info(`Track Match: Updated ${Object.keys(winData).length}`);
     return res.status(204).json();
   } catch (e) {
     console.error(e);
@@ -276,7 +303,8 @@ const trackMatch = async (_: Request, res: Response) => {
 
 const router = Router();
 
-router.get('/track-match', auth, trackMatch);
+router.get('/track-match', cache('10 minutes'), auth, trackMatch);
+router.get('/:season', getMatchesBySeason);
 router.get('/', getMatches);
 
 export default router;
