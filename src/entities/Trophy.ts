@@ -1,6 +1,7 @@
 import { Entity as TOEntity, Column, ManyToOne, JoinColumn } from 'typeorm';
+
 import Entity from './Entity';
-import { Game } from './Game';
+import { MatchData } from './MatchData';
 import { Player } from './Player';
 
 @TOEntity('trophies')
@@ -11,17 +12,13 @@ export class Trophy extends Entity {
   }
 
   @Column()
-  kills: number;
-
-  @Column()
   name: string;
 
-  @Column({ default: false })
-  approved: boolean;
-
-  @ManyToOne(() => Game, (game) => game.trophies)
-  @JoinColumn()
-  game: Game;
+  @ManyToOne(() => MatchData, (match) => match.trophies, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  match: MatchData;
 
   @ManyToOne(() => Player, (player) => player.trophies, {
     onDelete: 'CASCADE',

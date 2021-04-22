@@ -74,14 +74,11 @@ interface MatchPlayers {
 }
 
 interface MatchData {
-  status: string;
-  data: {
-    allPlayers: MatchPlayers[];
-  };
+  allPlayers: MatchPlayers[];
 }
 
 export const buildMatchData = (data: MatchData) => {
-  const players = data.data.allPlayers;
+  const players = data.allPlayers;
 
   const groups = players.reduce((groups, player) => {
     const group = groups[player.player.team]?.players || [];
