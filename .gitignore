@@ -9,3 +9,4 @@ temp/
 dump.rdb
 .env.production
 logs
+deploy.sh
