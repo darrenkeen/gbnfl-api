@@ -58,7 +58,6 @@ const getWeeklyData = async (req: Request, res: Response) => {
       players.map(async (player) => {
         try {
           const KD = await mapWeeklyData(player);
-
           returnData[player.name] = KD;
           return;
         } catch (e) {
@@ -131,8 +130,8 @@ router.get(
 );
 router.get(
   '/weekly/:playerId/:platform?',
-  auth,
   cache('5 minutes', onlyStatus200),
+  auth,
   cacheTimestamp,
   getWeeklyData
 );

@@ -25,6 +25,19 @@ const getMatches = async (_: Request, res: Response) => {
   }
 };
 
+const getSingleMatch = async (req: Request, res: Response) => {
+  const { matchDataId } = req.params;
+  try {
+    const matchData = await MatchData.findOneOrFail(matchDataId, {
+      relations: ['trophies', 'trophies.player', 'teams', 'teams.players'],
+    });
+    return res.json({ data: matchData });
+  } catch (e) {
+    console.error(e);
+    return res.send(404).json({ error: 'Match not found' });
+  }
+};
+
 const getMatchesBySeason = async (req: Request, res: Response) => {
   const { season } = req.params;
   if (!SEASON_START_END[season]) {
@@ -305,6 +318,7 @@ const router = Router();
 
 router.get('/track-match', cache('10 minutes'), auth, trackMatch);
 router.get('/:season', getMatchesBySeason);
+router.get('/id/:matchDataId', getSingleMatch);
 router.get('/', getMatches);
 
 export default router;

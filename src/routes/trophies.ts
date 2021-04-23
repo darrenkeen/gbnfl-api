@@ -61,6 +61,23 @@ const getTrophiesFromNameAndSeason = async (req: Request, res: Response) => {
     return res.status(500).json({ error: 'Something went wrong' });
   }
 };
+const getTrophiesFromUnoAndSeason = async (req: Request, res: Response) => {
+  const { season, uno } = req.params;
+  try {
+    const player = await Player.findOneOrFail({
+      where: {
+        uno,
+      },
+      relations: ['trophies', 'trophies.match'],
+    });
+
+    const playerData = getPlayerData(player, season);
+    return res.json(playerData);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Something went wrong' });
+  }
+};
 
 const deleteTrophy = async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -87,6 +104,7 @@ const router = Router();
 router.get('/', getTrophies);
 router.get('/:season', getTrophiesBySeasonForPlayers);
 router.get('/:name/:season', getTrophiesFromNameAndSeason);
+router.get('/uno/:uno/:season', getTrophiesFromUnoAndSeason);
 router.delete('/:id', deleteTrophy);
 
 export default router;
