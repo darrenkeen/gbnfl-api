@@ -1,6 +1,7 @@
 import { Entity as TOEntity, Column, ManyToOne } from 'typeorm';
 import Entity from './Entity';
 import { MatchDataTeam } from './MatchDataTeam';
+import { Player } from './Player';
 
 @TOEntity('matchDataPlayer')
 export class MatchDataPlayer extends Entity {
@@ -104,6 +105,9 @@ export class MatchDataPlayer extends Entity {
 
   @Column()
   damageTaken: number;
+
+  @ManyToOne(() => Player, { nullable: true })
+  player: Player;
 
   @ManyToOne(() => MatchDataTeam, {
     onDelete: 'CASCADE',

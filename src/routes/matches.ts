@@ -59,7 +59,6 @@ const getMatchesBySeason = async (req: Request, res: Response) => {
 };
 
 const trackMatch = async (_: Request, res: Response) => {
-  // const { pass } = req.params;
   // Take all players with uno
   let players: Player[] | null = null;
   try {
@@ -73,7 +72,8 @@ const trackMatch = async (_: Request, res: Response) => {
   }
 
   // Look at API for each player and store matchId for wins
-  const winMatches: Record<string, { unos: string[] }> = {};
+  const wonRankedMatches: Record<string, { unos: string[] }> = {};
+  const lostMatches: string[] = [];
   try {
     await Promise.all(
       players!.map(async (player) => {
@@ -86,15 +86,21 @@ const trackMatch = async (_: Request, res: Response) => {
             match.playerStats.teamPlacement === 1 &&
             TROPHY_MODES.includes(match.mode)
           ) {
-            if (!Object.keys(winMatches).includes(match.matchID)) {
-              winMatches[match.matchID] = {
+            if (!Object.keys(wonRankedMatches).includes(match.matchID)) {
+              wonRankedMatches[match.matchID] = {
                 unos: [match.player.uno],
               };
             } else {
-              winMatches[match.matchID] = {
-                ...winMatches[match.matchID],
-                unos: [...winMatches[match.matchID].unos, match.player.uno],
+              wonRankedMatches[match.matchID] = {
+                ...wonRankedMatches[match.matchID],
+                unos: [
+                  ...wonRankedMatches[match.matchID].unos,
+                  match.player.uno,
+                ],
               };
+            }
+          } else {
+            if (!lostMatches.includes(match.matchID)) {
             }
           }
         });
@@ -103,58 +109,6 @@ const trackMatch = async (_: Request, res: Response) => {
   } catch (e) {
     console.error(e);
   }
-
-  // const winMatchesForce: Record<string, { unos: string[] }> = {
-  //   '1539442300308939654': {
-  //     unos: ['12670946'],
-  //   },
-  //   '9069969306074646909': {
-  //     unos: ['12670946', '8457816366480952913'],
-  //   },
-  //   '14241801348241998732': {
-  //     unos: ['12670946'],
-  //   },
-  //   '871928445402018305': {
-  //     unos: ['8457816366480952913', '16922996'],
-  //   },
-  //   '10759175741790521369': {
-  //     unos: ['12670946'],
-  //   },
-  //   '465090429513817772': {
-  //     unos: ['12670946', '8457816366480952913', '16922996'],
-  //   },
-  //   '765168108982760248': {
-  //     unos: [
-  //       '12670946',
-  //       '8457816366480952913',
-  //       '16110194213510557660',
-  //       '16922996',
-  //     ],
-  //   },
-  //   '8275604190462253818': {
-  //     unos: [
-  //       '12670946',
-  //       '3099560545423409788',
-  //       '8457816366480952913',
-  //       '16922996',
-  //     ],
-  //   },
-  //   '15069177703941863679': {
-  //     unos: ['12670946', '16922996'],
-  //   },
-  //   '9092382647468265237': {
-  //     unos: ['12670946', '8457816366480952913', '16922996'],
-  //   },
-  //   '2215523308505910716': {
-  //     unos: ['3099560545423409788'],
-  //   },
-  //   '6849636118335289589': {
-  //     unos: ['8457816366480952913', '16922996'],
-  //   },
-  //   '9609466009987422534': {
-  //     unos: ['12670946'],
-  //   },
-  // };
 
   // Get match Data for each Win
   const winData: Record<
@@ -167,7 +121,7 @@ const trackMatch = async (_: Request, res: Response) => {
 
   try {
     await Promise.all(
-      Object.keys(winMatches).map(async (key) => {
+      Object.keys(wonRankedMatches).map(async (key) => {
         const matchExist = await MatchData.findOne({
           where: { inGameMatchId: key },
         });
@@ -177,7 +131,7 @@ const trackMatch = async (_: Request, res: Response) => {
         const currentMatch = await API.MWFullMatchInfowz(key, 'all');
         winData[key] = {
           data: buildMatchData(currentMatch),
-          unos: winMatches[key].unos,
+          unos: wonRankedMatches[key].unos,
         };
       })
     );
@@ -224,13 +178,25 @@ const trackMatch = async (_: Request, res: Response) => {
 
               await Promise.all(
                 team.players.map(async (teamPlayer: any) => {
+                  let playerId: string | null = null;
+                  if (unos.includes(teamPlayer.player.uno)) {
+                    const player = await tm.query(
+                      `
+                        select * from "players" where uno=$1 LIMIT 1
+                      `,
+                      [teamPlayer.player.uno]
+                    );
+                    if (player && player.length < 1) {
+                      playerId = player[0].id;
+                    }
+                  }
                   await tm.query(
                     `
                   insert into "matchDataPlayer" (
-                    "id", "username", "teamId", "uno", "missionsComplete", "missionStats", "headshots", "assists", "scorePerMinute", "kills", "score", "medalXp", "matchXp", "scoreXp", "wallBangs", "totalXp", "challengeXp", "distanceTraveled", "teamSurvivalTime", "deaths", "kdRatio", "objectiveBrMissionPickupTablet", "bonusXp", "gulagDeaths", "timePlayed", "executions", "gulagKills", "nearmisses", "objectiveBrCacheOpen","percentTimeMoving", "miscXp", "longestStreak", "damageDone", "damageTaken"
+                    "id", "username", "teamId", "uno", "missionsComplete", "missionStats", "headshots", "assists", "scorePerMinute", "kills", "score", "medalXp", "matchXp", "scoreXp", "wallBangs", "totalXp", "challengeXp", "distanceTraveled", "teamSurvivalTime", "deaths", "kdRatio", "objectiveBrMissionPickupTablet", "bonusXp", "gulagDeaths", "timePlayed", "executions", "gulagKills", "nearmisses", "objectiveBrCacheOpen","percentTimeMoving", "miscXp", "longestStreak", "damageDone", "damageTaken", "playerId"
                   )
                   values (
-                    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34
+                    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35
                   )
                   returning *
                   `,
@@ -272,6 +238,7 @@ const trackMatch = async (_: Request, res: Response) => {
                       teamPlayer.playerStats.longestStreak,
                       teamPlayer.playerStats.damageDone,
                       teamPlayer.playerStats.damageTaken,
+                      playerId,
                     ]
                   );
                 })
@@ -290,7 +257,7 @@ const trackMatch = async (_: Request, res: Response) => {
               );
 
               if (!player || player.length < 1) {
-                throw new Error(`No player with ${uno} uno.`);
+                return;
               }
 
               await tm.query(

@@ -103,9 +103,18 @@ const getMatchData = async (req: Request, res: Response) => {
   }
 };
 
-const testing = async (_: Request, res: Response) => {
+const testing = async (req: Request, res: Response) => {
+  const { end } = req.params;
+
   try {
-    return res.json();
+    const data = await API.MWcombatwzdate('cawmeacow', 0, end, 'xbl');
+
+    const ret = data.matches.map((match: any) => ({
+      start: new Date(match.utcStartSeconds * 1000).toUTCString(),
+      second: match.utcStartSeconds,
+      end: match.utcEndSeconds,
+    }));
+    return res.json({ data: ret });
   } catch (e) {
     console.error(e);
     return res.status(400).json({ error: e });
@@ -142,6 +151,6 @@ router.get(
   getMatchData
 );
 router.get('/seasons', getAvailableSeasons);
-router.get('/testing', auth, testing);
+router.get('/testing/:end', auth, testing);
 
 export default router;

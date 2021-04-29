@@ -1,5 +1,6 @@
 import { Entity as TOEntity, Column, OneToMany, Index } from 'typeorm';
 import Entity from './Entity';
+import { MatchDataPlayer } from './MatchDataPlayer';
 import { Trophy } from './Trophy';
 
 @TOEntity('players')
@@ -29,6 +30,9 @@ export class Player extends Entity {
     cascade: true,
   })
   trophies: Trophy[];
+
+  @OneToMany(() => MatchDataPlayer, (mdt) => mdt.player)
+  matches: MatchDataPlayer[];
 
   public static mockTestUser(passedPlayer: Partial<Player>): Player {
     const player = new Player(passedPlayer);

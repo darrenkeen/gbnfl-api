@@ -10,18 +10,6 @@ export class MatchDataTeam extends Entity {
     Object.assign(this, matchDataTeam);
   }
 
-  // @Column()
-  // kills: number;
-
-  // @Column()
-  // deaths: number;
-
-  // @Column()
-  // teamKdRatio: number;
-
-  // @Column()
-  // teamSurvivalTime: number;
-
   @Column()
   teamName: string;
 

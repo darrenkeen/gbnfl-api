@@ -9,6 +9,7 @@ const getPlayers = async (_: Request, res: Response) => {
   try {
     const players = await Player.find({
       order: { createdAt: 'DESC' },
+      relations: ['matches', 'matches.team', 'matches.team.match'],
     });
     return res.json(buildResponse(res, players));
   } catch (err) {
