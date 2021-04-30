@@ -22,88 +22,88 @@ export class MatchDataPlayer extends Entity {
   @Column('text', { array: true })
   missionStats: string[]; // scavenger-1 OR bounty-2
 
-  @Column()
+  @Column({ nullable: true })
   headshots: number;
 
-  @Column()
+  @Column({ nullable: true })
   assists: number;
 
-  @Column('decimal')
+  @Column('decimal', { nullable: true })
   scorePerMinute: number;
 
-  @Column()
+  @Column({ nullable: true })
   kills: number;
 
-  @Column()
+  @Column({ nullable: true })
   score: number;
 
-  @Column()
+  @Column({ nullable: true })
   medalXp: number;
 
-  @Column()
+  @Column({ nullable: true })
   matchXp: number;
 
-  @Column()
+  @Column({ nullable: true })
   scoreXp: number;
 
-  @Column()
+  @Column({ nullable: true })
   wallBangs: number;
 
-  @Column()
+  @Column({ nullable: true })
   totalXp: number;
 
-  @Column()
+  @Column({ nullable: true })
   challengeXp: number;
 
-  @Column('decimal')
+  @Column('decimal', { nullable: true })
   distanceTraveled: number;
 
-  @Column('decimal')
+  @Column('decimal', { nullable: true })
   teamSurvivalTime: number;
 
-  @Column()
+  @Column({ nullable: true })
   deaths: number;
 
-  @Column('decimal')
+  @Column('decimal', { nullable: true })
   kdRatio: number;
 
-  @Column()
+  @Column({ nullable: true })
   objectiveBrMissionPickupTablet: number;
 
-  @Column()
+  @Column({ nullable: true })
   bonusXp: number;
 
-  @Column()
+  @Column({ nullable: true })
   gulagDeaths: number;
 
-  @Column()
+  @Column({ nullable: true })
   timePlayed: number;
 
-  @Column()
+  @Column({ nullable: true })
   executions: number;
 
-  @Column()
+  @Column({ nullable: true })
   gulagKills: number;
 
-  @Column()
+  @Column({ nullable: true })
   nearmisses: number;
 
-  @Column()
+  @Column({ nullable: true })
   objectiveBrCacheOpen: number;
 
-  @Column('decimal')
+  @Column('decimal', { nullable: true })
   percentTimeMoving: number;
 
-  @Column()
+  @Column({ nullable: true })
   miscXp: number;
 
-  @Column()
+  @Column({ nullable: true })
   longestStreak: number;
 
-  @Column()
+  @Column({ nullable: true })
   damageDone: number;
 
-  @Column()
+  @Column({ nullable: true })
   damageTaken: number;
 
   @ManyToOne(() => Player, { nullable: true })

@@ -13,7 +13,7 @@ export class MatchDataTeam extends Entity {
   @Column()
   teamName: string;
 
-  @Column()
+  @Column({ nullable: true })
   teamPlacement: number;
 
   @OneToMany(() => MatchDataPlayer, (player) => player.team, {

@@ -3,7 +3,7 @@ const API = require('call-of-duty-api')();
 
 export default async (_: Request, res: Response, next: NextFunction) => {
   try {
-    await API.login('dkag1003@gmail.com', '2rpQjsk2!');
+    await API.login(process.env.COD_API_USER, process.env.COD_API_PASS);
     return next();
   } catch (e) {
     console.error(e);

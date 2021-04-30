@@ -11,3 +11,4 @@ dump.rdb
 logs
 deploy.sh
 dbdumps
+.DS_Store
