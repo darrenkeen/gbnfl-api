@@ -234,7 +234,7 @@ const trackMatch = async (_: Request, res: Response) => {
                       `,
                       [teamPlayer.player.uno]
                     );
-                    if (player && player.length < 1) {
+                    if (player && player.length !== 0) {
                       playerId = player[0].id;
                     }
                   }

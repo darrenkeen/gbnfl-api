@@ -26,8 +26,8 @@ const getPlayerByName = async (req: Request, res: Response) => {
         {
           name,
         },
-        {},
       ],
+      relations: ['matches', 'matches.team', 'matches.team.match'],
     });
     return res.json(buildResponse(res, player));
   } catch (err) {
