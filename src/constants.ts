@@ -31,9 +31,10 @@ export const MODE_KEYS = {
   br_mini_miniroyale: 'Mini Royale',
 };
 
+export const WITH_RANK_SOLO_MODE = ['br_brsolo', 'br_brz_brsolo'];
+
 export const WITH_RANK_MODE = [
-  'br_brsolo',
-  'br_brz_brsolo',
+  ...WITH_RANK_SOLO_MODE,
   'br_brduos',
   'br_brz_brduos',
   'br_brtrios',

@@ -7,7 +7,11 @@ import { Player } from '../entities/Player';
 import auth from '../middleware/auth';
 import { buildMatchData } from '../utils/buildMatchData';
 import { getMissionStats } from '../utils/getMissionStats';
-import { SEASON_START_END, TROPHY_MODES } from '../constants';
+import {
+  SEASON_START_END,
+  TROPHY_MODES,
+  WITH_RANK_SOLO_MODE,
+} from '../constants';
 // import cache from '../middleware/cache';
 import { logger } from '../config/logger';
 
@@ -77,7 +81,7 @@ const trackMatch = async (_: Request, res: Response) => {
   const lostMatches: Record<string, { unos: string[] }> = {};
   try {
     await Promise.all(
-      players!.map(async (player) => {
+      players.map(async (player) => {
         try {
           const latestPlayerData = await API.MWcombatwz(
             player.platformId,
@@ -115,19 +119,20 @@ const trackMatch = async (_: Request, res: Response) => {
             }
           });
         } catch (e) {
-          logger.error({
-            error: {
-              message: e,
-              platformId: player.platformId,
-            },
-          });
+          logger.error(
+            JSON.stringify({
+              error: {
+                message: e,
+                platformId: player.platformId,
+              },
+            })
+          );
         }
       })
     );
   } catch (e) {
-    logger.error(e);
+    logger.error(JSON.stringify(e));
   }
-  console.log('lostMatches', lostMatches);
   // Get match Data for each Win and each loss
   const winData: Record<
     string,
@@ -295,33 +300,40 @@ const trackMatch = async (_: Request, res: Response) => {
             })
           );
 
-          await Promise.all(
-            unos.map(async (uno: string) => {
-              let player: Player[] | null = null;
-              player = await tm.query(
-                `
+          const matchPlayerUnos = unos.filter((uno) =>
+            players!.some((player) => player.uno === uno)
+          );
+
+          const isSoloRanked = WITH_RANK_SOLO_MODE.includes(data.mode);
+          console.log(matchPlayerUnos, isSoloRanked);
+
+          if (isSoloRanked || matchPlayerUnos.length > 1)
+            await Promise.all(
+              unos.map(async (uno: string) => {
+                let player: Player[] | null = null;
+                player = await tm.query(
+                  `
                   select * from "players" where uno=$1 LIMIT 1
                 `,
-                [uno]
-              );
+                  [uno]
+                );
 
-              if (!player || player.length < 1) {
-                return;
-              }
+                if (!player || player.length < 1) {
+                  return;
+                }
 
-              await tm.query(
-                `
+                await tm.query(
+                  `
                   insert into "trophies" ("id", "name", "matchId")
                   values ($1, $2, $3)
                 `,
-                [nanoid(10), player[0].name, matchData[0].id]
-              );
-            })
-          );
+                  [nanoid(10), player[0].name, matchData[0].id]
+                );
+              })
+            );
         });
       })
     );
-    console.log(lostData);
     await Promise.all(
       Object.keys(lostData).map(async (lostKey) => {
         const data = lostData[lostKey].data;
@@ -367,7 +379,7 @@ const trackMatch = async (_: Request, res: Response) => {
                       `,
                       [teamPlayer.player.uno]
                     );
-                    if (player && player.length < 1) {
+                    if (player && player.length !== 0) {
                       playerId = player[0].id;
                     }
                   }
