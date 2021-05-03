@@ -20,7 +20,7 @@ dotenv.config();
       type: 'postgres',
       url: process.env.DATABASE_URL,
       logging: false,
-      synchronize: true,
+      synchronize: false,
       schema: 'public',
       entities: [path.join(__dirname, './entities/*')],
       migrations: [path.join(__dirname, './migrations/*')],

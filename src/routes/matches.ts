@@ -12,7 +12,7 @@ import {
   TROPHY_MODES,
   WITH_RANK_SOLO_MODE,
 } from '../constants';
-// import cache from '../middleware/cache';
+import cache from '../middleware/cache';
 import { logger } from '../config/logger';
 
 const API = require('call-of-duty-api')();
@@ -305,7 +305,6 @@ const trackMatch = async (_: Request, res: Response) => {
           );
 
           const isSoloRanked = WITH_RANK_SOLO_MODE.includes(data.mode);
-          console.log(matchPlayerUnos, isSoloRanked);
 
           if (isSoloRanked || matchPlayerUnos.length > 1)
             await Promise.all(
@@ -456,7 +455,7 @@ const trackMatch = async (_: Request, res: Response) => {
 
 const router = Router();
 
-router.get('/track-match', auth, trackMatch);
+router.get('/track-match', cache('5 minutes'), auth, trackMatch);
 router.get('/:season', getMatchesBySeason);
 router.get('/id/:matchDataId', getSingleMatch);
 router.get('/', getMatches);
