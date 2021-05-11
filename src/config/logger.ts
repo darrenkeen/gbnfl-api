@@ -1,8 +1,9 @@
 import { existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { createLogger, format, transports } from 'winston';
+console.log(process.cwd());
 
-const logDir = 'logs';
+const logDir = process.cwd() + '/logs';
 
 // Create the log directory if it does not exist
 if (!existsSync(logDir)) {

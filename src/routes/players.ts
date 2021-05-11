@@ -136,7 +136,7 @@ const router = Router();
 
 router.get('/', cacheTimestamp, getPlayers);
 router.get('/:name', getPlayerByName);
-router.get('/uno/:name', getPlayerByUno);
+router.get('/uno/:uno', getPlayerByUno);
 router.post('/', createPlayer);
 router.delete('/:id', deletePlayer);
 router.put('/:id', updatePlayer);
