@@ -9,6 +9,7 @@ const getPlayers = async (_: Request, res: Response) => {
   try {
     const players = await Player.find({
       order: { createdAt: 'DESC' },
+      relations: ['matches', 'matches.team', 'matches.team.match'],
     });
     return res.json(buildResponse(res, players));
   } catch (err) {
@@ -25,8 +26,8 @@ const getPlayerByName = async (req: Request, res: Response) => {
         {
           name,
         },
-        {},
       ],
+      relations: ['matches', 'matches.team', 'matches.team.match'],
     });
     return res.json(buildResponse(res, player));
   } catch (err) {
@@ -135,7 +136,7 @@ const router = Router();
 
 router.get('/', cacheTimestamp, getPlayers);
 router.get('/:name', getPlayerByName);
-router.get('/uno/:name', getPlayerByUno);
+router.get('/uno/:uno', getPlayerByUno);
 router.post('/', createPlayer);
 router.delete('/:id', deletePlayer);
 router.put('/:id', updatePlayer);

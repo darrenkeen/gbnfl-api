@@ -9,7 +9,6 @@ const allowedOrigins = ['https://gbnfl-git-develop-darrenkeen1.vercel.app'];
 
 export function registerMiddleware(router: Router): void {
   router.use(json());
-  router.use(compression());
   router.use(
     cors({
       credentials: true,
@@ -28,6 +27,7 @@ export function registerMiddleware(router: Router): void {
       },
     })
   );
+  router.use(compression());
 
   router.use((req: Request, _: Response, next: NextFunction) => {
     if (process.env.NODE_ENV !== 'test') {

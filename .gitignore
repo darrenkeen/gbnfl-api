@@ -10,3 +10,5 @@ dump.rdb
 .env.production
 logs
 deploy.sh
+dbdumps
+.DS_Store
