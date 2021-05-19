@@ -1,7 +1,9 @@
-# Awesome Project Build with TypeORM
+# GBNFL Warzone Tracker API
 
 Steps to run this project:
 
-1. Run `npm i` command
+1. Run `yarn` command
 2. Setup database settings inside `ormconfig.json` file
-3. Run `npm start` command
+3. Run `yarn dev` command
+
+> Note: You need a redis server running
