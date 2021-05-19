@@ -16,6 +16,9 @@ export class MatchDataPlayer extends Entity {
   @Column()
   uno: string;
 
+  @Column({ nullable: true })
+  clanTag: string;
+
   @Column()
   missionsComplete: number;
 

@@ -16,11 +16,10 @@ export const getPlayerData = (player: Player, season: number | string) => {
           let isSeason = false;
           for (const key in SEASON_START_END) {
             const { start, end } = SEASON_START_END[key];
-
             if (
-              trophy.match.utcStartSeconds * 1000 > start &&
-              trophy.match.utcStartSeconds * 1000 < end &&
-              key === season
+              key === season &&
+              trophy.match.utcStartSeconds > start / 1000 &&
+              trophy.match.utcStartSeconds < end / 1000
             ) {
               isSeason = true;
               break;

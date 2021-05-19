@@ -1,7 +1,6 @@
 import { existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { createLogger, format, transports } from 'winston';
-console.log(process.cwd());
 
 const logDir = process.cwd() + '/logs';
 

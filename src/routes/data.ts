@@ -1,12 +1,11 @@
 import { Request, Response, Router } from 'express';
 import axios from 'axios';
+
 import { logger } from '../config/logger';
-import { Player } from '../entities/Player';
 import auth from '../middleware/auth';
 import cache, { onlyStatus200 } from '../middleware/cache';
 import cacheTimestamp from '../middleware/cacheTimestamp';
 import { buildResponse } from '../utils/buildResponse';
-import { mapWeeklyData } from '../utils/mapWeeklyData';
 import { buildMatchData } from '../utils/buildMatchData';
 import { SEASON_START_END } from '../constants';
 const API = require('call-of-duty-api')();
@@ -43,51 +42,6 @@ const getLifetimeData = async (req: Request, res: Response) => {
   }
 };
 
-const getWeeklyData = async (req: Request, res: Response) => {
-  const { playerId, platform } = req.params;
-  if (playerId === 'all') {
-    let players: Player[] = [];
-    try {
-      players = await Player.find();
-    } catch (err) {
-      console.error(err);
-      return res.status(400).json();
-    }
-    let returnData: any = {};
-    await Promise.all(
-      players.map(async (player) => {
-        try {
-          const KD = await mapWeeklyData(player);
-          returnData[player.name] = KD;
-          return;
-        } catch (e) {
-          if (typeof e === 'string' && e === 'Not permitted: not allowed') {
-            return;
-          }
-          console.error(e);
-          return res.status(404).json({ error: e });
-        }
-      })
-    );
-    return res.json(buildResponse(res, returnData));
-  } else {
-    try {
-      const KD = await mapWeeklyData({
-        platformId: playerId,
-        platformType: platform,
-      });
-
-      return res.json(buildResponse(res, KD));
-    } catch (e) {
-      if (typeof e === 'string' && e === 'Not permitted: not allowed') {
-        return;
-      }
-      console.error(e);
-      return res.status(404).json({ error: e });
-    }
-  }
-};
-
 const getMatchData = async (req: Request, res: Response) => {
   const { matchId } = req.params;
   try {
@@ -103,18 +57,11 @@ const getMatchData = async (req: Request, res: Response) => {
   }
 };
 
-const testing = async (req: Request, res: Response) => {
-  const { end } = req.params;
-
+const testing = async (_: Request, res: Response) => {
   try {
-    const data = await API.MWcombatwzdate('cawmeacow', 0, end, 'xbl');
+    const data = await API.MWFullMatchInfowz('183624281502880627', 'all');
 
-    const ret = data.matches.map((match: any) => ({
-      start: new Date(match.utcStartSeconds * 1000).toUTCString(),
-      second: match.utcStartSeconds,
-      end: match.utcEndSeconds,
-    }));
-    return res.json({ data: ret });
+    return res.json({ data });
   } catch (e) {
     console.error(e);
     return res.status(400).json({ error: e });
@@ -136,13 +83,6 @@ router.get(
   cache('5 minutes', onlyStatus200),
   cacheTimestamp,
   getLifetimeData
-);
-router.get(
-  '/weekly/:playerId/:platform?',
-  cache('5 minutes', onlyStatus200),
-  auth,
-  cacheTimestamp,
-  getWeeklyData
 );
 router.get(
   '/match/:matchId',

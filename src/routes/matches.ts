@@ -1,5 +1,5 @@
 import { Request, Response, Router } from 'express';
-import { Between, getConnection, IsNull, Not } from 'typeorm';
+import { Between, getConnection, getRepository, IsNull, Not } from 'typeorm';
 import { nanoid } from 'nanoid';
 
 import { MatchData } from '../entities/MatchData';
@@ -14,6 +14,9 @@ import {
 } from '../constants';
 import cache from '../middleware/cache';
 import { logger } from '../config/logger';
+import { LifetimePlayer } from '../entities/LifetimePlayer';
+import { mapWeeklyData } from '../utils/mapWeeklyData';
+import { WeeklyMode } from '../entities/WeeklyMode';
 
 const API = require('call-of-duty-api')();
 
@@ -35,7 +38,31 @@ const getSingleMatch = async (req: Request, res: Response) => {
     const matchData = await MatchData.findOneOrFail(matchDataId, {
       relations: ['trophies', 'trophies.player', 'teams', 'teams.players'],
     });
-    return res.json({ data: matchData });
+    const teamWithStats = matchData.teams.map((team) => {
+      const stats = team.players.reduce(
+        (acc, player) => {
+          const totalKills = acc.kills + player.kills;
+          const totalDeaths = acc.deaths + player.deaths;
+          const totalKdRatio = Number(
+            (totalKills / (totalDeaths === 0 ? 1 : totalDeaths)).toFixed(2)
+          );
+          return {
+            ...acc,
+            kills: totalKills,
+            deaths: totalDeaths,
+            kdRatio: totalKdRatio,
+          };
+        },
+        { kills: 0, deaths: 0, kdRatio: 0 }
+      );
+      return { ...team, ...stats };
+    });
+    return res.json({
+      data: {
+        ...matchData,
+        teams: [...teamWithStats],
+      },
+    });
   } catch (e) {
     logger.error(e);
     return res.send(404).json({ error: 'Match not found' });
@@ -43,7 +70,6 @@ const getSingleMatch = async (req: Request, res: Response) => {
 };
 
 const getMatchesBySeason = async (req: Request, res: Response) => {
-  res.setHeader('Cache-Control', 'no-cache');
   const { season } = req.params;
   if (!SEASON_START_END[season]) {
     logger.error(`Season ${season} doesn't exist`);
@@ -53,10 +79,54 @@ const getMatchesBySeason = async (req: Request, res: Response) => {
     const { start, end } = SEASON_START_END[season];
 
     const matchData = await MatchData.find({
-      where: { utcStartSeconds: Between(start / 1000, end / 1000) },
+      where: {
+        utcStartSeconds: Between(start / 1000, end / 1000),
+      },
       relations: ['trophies', 'trophies.player', 'teams', 'teams.players'],
     });
     return res.json({ data: matchData });
+  } catch (e) {
+    logger.error(e);
+    return res.sendStatus(500).json({ error: e });
+  }
+};
+
+const getMatchesForPlayerWithSkip = async (req: Request, res: Response) => {
+  const { uno, startSeconds } = req.params;
+  try {
+    const { count } = await getRepository(MatchData)
+      .createQueryBuilder('match')
+      .select('COUNT(*)', 'count')
+      .leftJoin('match.teams', 'teams')
+      .leftJoin('teams.players', 'players')
+      .where('players.uno = :uno', { uno })
+      .getRawOne();
+    const matchDataQuery = getRepository(MatchData)
+      .createQueryBuilder('match')
+      .leftJoinAndSelect('match.teams', 'teams')
+      .leftJoinAndSelect('teams.players', 'players')
+      .where('players.uno = :uno', { uno });
+
+    if (Number(startSeconds) > 0) {
+      matchDataQuery.andWhere('match.utcStartSeconds < :startSeconds', {
+        startSeconds,
+      });
+    }
+
+    const matchData = await matchDataQuery
+      .orderBy({
+        'match.utcStartSeconds': 'DESC',
+      })
+      .limit(10)
+      .getMany();
+
+    // const matchData = await MatchDataPlayer.find({
+    //   where: {
+    //     uno,
+    //   },
+    //   relations: ['team', 'team.match'],
+    // });
+    return res.json({ data: { matches: matchData, totalMatches: count } });
   } catch (e) {
     logger.error(e);
     return res.send(500).json({ error: e });
@@ -82,6 +152,84 @@ const trackMatch = async (_: Request, res: Response) => {
   try {
     await Promise.all(
       players.map(async (player) => {
+        try {
+          const lifetime = await API.MWwz(
+            player.platformId,
+            player.platformType
+          );
+          const brData = lifetime.lifetime.mode.br.properties;
+          const currentLifetime = await LifetimePlayer.findOne({
+            where: {
+              player: {
+                id: player.id,
+              },
+            },
+          });
+
+          if (currentLifetime) {
+            const del = await LifetimePlayer.update(currentLifetime.id, brData);
+            if (
+              typeof del.affected !== 'undefined' &&
+              del.affected !== null &&
+              del.affected < 1
+            ) {
+              logger.error(
+                `There was a problem updating ${currentLifetime.player.platformId} lifetime`
+              );
+            }
+          } else {
+            const lifetimeEntry = new LifetimePlayer({ ...brData, player });
+            await lifetimeEntry.save();
+          }
+        } catch (e) {
+          logger.error(`There was a problem updating lifetime`);
+        }
+
+        try {
+          const weekly = await mapWeeklyData(
+            player.platformId,
+            player.platformType
+          );
+
+          await Promise.all(
+            Object.keys(weekly).map(async (modeDataKey) => {
+              const currentWeekly = await WeeklyMode.findOne({
+                where: {
+                  mode: modeDataKey,
+                  player: {
+                    id: player.id,
+                  },
+                },
+              });
+              if (currentWeekly) {
+                const del = await WeeklyMode.update(
+                  currentWeekly.id,
+                  weekly[modeDataKey]
+                );
+                if (
+                  typeof del.affected !== 'undefined' &&
+                  del.affected !== null &&
+                  del.affected < 1
+                ) {
+                  logger.error(
+                    `There was a problem updating ${player.platformId} weekly for ${modeDataKey}`
+                  );
+                }
+              } else {
+                logger.info(`No current for ${player.name}`);
+                const weeklyEntry = new WeeklyMode({
+                  mode: modeDataKey,
+                  player,
+                  ...weekly[modeDataKey],
+                });
+                await weeklyEntry.save();
+              }
+            })
+          );
+        } catch (e) {
+          logger.error(`There was a problem updating weekly`);
+        }
+
         try {
           const latestPlayerData = await API.MWcombatwz(
             player.platformId,
@@ -246,16 +394,17 @@ const trackMatch = async (_: Request, res: Response) => {
                   await tm.query(
                     `
                     insert into "matchDataPlayer" (
-                      "id", "username", "teamId", "uno", "missionsComplete", "missionStats", "headshots", "assists", "scorePerMinute", "kills", "score", "medalXp", "matchXp", "scoreXp", "wallBangs", "totalXp", "challengeXp", "distanceTraveled", "teamSurvivalTime", "deaths", "kdRatio", "objectiveBrMissionPickupTablet", "bonusXp", "gulagDeaths", "timePlayed", "executions", "gulagKills", "nearmisses", "objectiveBrCacheOpen","percentTimeMoving", "miscXp", "longestStreak", "damageDone", "damageTaken", "playerId"
+                      "id", "username", "clanTag", "teamId", "uno", "missionsComplete", "missionStats", "headshots", "assists", "scorePerMinute", "kills", "score", "medalXp", "matchXp", "scoreXp", "wallBangs", "totalXp", "challengeXp", "distanceTraveled", "teamSurvivalTime", "deaths", "kdRatio", "objectiveBrMissionPickupTablet", "bonusXp", "gulagDeaths", "timePlayed", "executions", "gulagKills", "nearmisses", "objectiveBrCacheOpen","percentTimeMoving", "miscXp", "longestStreak", "damageDone", "damageTaken", "playerId"
                     )
                     values (
-                      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35
+                      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36
                     )
                     returning *
                     `,
                     [
                       nanoid(10),
                       teamPlayer.player.username,
+                      teamPlayer.player.clantag,
                       matchDataTeam[0].id,
                       teamPlayer.player.uno,
                       teamPlayer.player.brMissionStats?.missionsComplete || 0,
@@ -385,16 +534,17 @@ const trackMatch = async (_: Request, res: Response) => {
                   await tm.query(
                     `
                     insert into "matchDataPlayer" (
-                      "id", "username", "teamId", "uno", "missionsComplete", "missionStats", "headshots", "assists", "scorePerMinute", "kills", "score", "medalXp", "matchXp", "scoreXp", "wallBangs", "totalXp", "challengeXp", "distanceTraveled", "teamSurvivalTime", "deaths", "kdRatio", "objectiveBrMissionPickupTablet", "bonusXp", "gulagDeaths", "timePlayed", "executions", "gulagKills", "nearmisses", "objectiveBrCacheOpen","percentTimeMoving", "miscXp", "longestStreak", "damageDone", "damageTaken", "playerId"
+                      "id", "username", "clanTag", "teamId", "uno", "missionsComplete", "missionStats", "headshots", "assists", "scorePerMinute", "kills", "score", "medalXp", "matchXp", "scoreXp", "wallBangs", "totalXp", "challengeXp", "distanceTraveled", "teamSurvivalTime", "deaths", "kdRatio", "objectiveBrMissionPickupTablet", "bonusXp", "gulagDeaths", "timePlayed", "executions", "gulagKills", "nearmisses", "objectiveBrCacheOpen","percentTimeMoving", "miscXp", "longestStreak", "damageDone", "damageTaken", "playerId"
                     )
                     values (
-                      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35
+                      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36
                     )
                     returning *
                     `,
                     [
                       nanoid(10),
                       teamPlayer.player.username,
+                      teamPlayer.player.clantag,
                       matchDataTeam[0].id,
                       teamPlayer.player.uno,
                       teamPlayer.player.brMissionStats?.missionsComplete || 0,
@@ -457,6 +607,7 @@ const router = Router();
 
 router.get('/track-match', cache('5 minutes'), auth, trackMatch);
 router.get('/:season', getMatchesBySeason);
+router.get('/uno/:uno/start/:startSeconds', getMatchesForPlayerWithSkip);
 router.get('/id/:matchDataId', getSingleMatch);
 router.get('/', getMatches);
 
