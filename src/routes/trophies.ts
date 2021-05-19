@@ -1,4 +1,6 @@
 import { Request, Response, Router } from 'express';
+import { SelectQueryBuilder } from 'typeorm';
+import { logger } from '../config/logger';
 import { SEASON_START_END } from '../constants';
 import { Player } from '../entities/Player';
 import { Trophy } from '../entities/Trophy';
@@ -14,6 +16,97 @@ const getTrophies = async (_: Request, res: Response) => {
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Something went wrong' });
+  }
+};
+
+const getTrophiesWithMatchBySeason = async (req: Request, res: Response) => {
+  const { season } = req.params;
+  if (!SEASON_START_END[season]) {
+    return res.status(400).json({ error: 'Season not valid' });
+  }
+  try {
+    const { start, end } = SEASON_START_END[season];
+    const data = await Trophy.find({
+      join: { alias: 'trophy', innerJoin: { match: 'trophy.match' } },
+      where: (queryBuilder: SelectQueryBuilder<Trophy>) => {
+        queryBuilder.where('match.utcStartSeconds BETWEEN :start AND :end', {
+          start: start / 1000,
+          end: end / 1000,
+        });
+      },
+      relations: ['match', 'match.teams', 'match.teams.players', 'player'],
+    });
+
+    const dataWithoutDuplicates = data.reduce((acc, curr) => {
+      const existsIndex = acc.findIndex(
+        (trophy) => trophy.match?.id === curr.match.id
+      );
+      if (existsIndex > -1) {
+        acc[existsIndex] = {
+          ...acc[existsIndex],
+          players: [...acc[existsIndex].players, curr.player],
+        };
+        return acc;
+      }
+
+      acc.push({ ...curr, players: [curr.player] });
+      return acc;
+    }, [] as Array<Partial<Trophy> & { players: Player[] }>);
+
+    return res.json({ data: dataWithoutDuplicates });
+  } catch (err) {
+    logger.error(err);
+    return res.sendStatus(500).json({ error: 'Something went wrong' });
+  }
+};
+
+const getTrophiesWithMatchBySeasonAndPlayer = async (
+  req: Request,
+  res: Response
+) => {
+  const { season, uno } = req.params;
+  if (!SEASON_START_END[season]) {
+    return res.status(400).json({ error: 'Season not valid' });
+  }
+  try {
+    const { start, end } = SEASON_START_END[season];
+    const data = await Trophy.find({
+      join: {
+        alias: 'trophy',
+        innerJoin: { match: 'trophy.match', player: 'trophy.player' },
+      },
+      where: (queryBuilder: SelectQueryBuilder<Trophy>) => {
+        queryBuilder.where('match.utcStartSeconds BETWEEN :start AND :end', {
+          start: start / 1000,
+          end: end / 1000,
+        });
+        queryBuilder.andWhere('player.uno = :uno', {
+          uno,
+        });
+      },
+      relations: ['match', 'match.teams', 'match.teams.players', 'player'],
+    });
+
+    const dataWithoutDuplicates = data.reduce((acc, curr) => {
+      const existsIndex = acc.findIndex(
+        (trophy) => trophy.match?.id === curr.match.id
+      );
+      if (existsIndex > -1) {
+        acc[existsIndex] = {
+          ...acc[existsIndex],
+          players: [...acc[existsIndex].players, curr.player],
+        };
+        return acc;
+      }
+
+      acc.push({ ...curr, players: [curr.player] });
+      return acc;
+    }, [] as Array<Partial<Trophy> & { players: Player[] }>);
+
+    return res.json({ data: dataWithoutDuplicates });
+  } catch (err) {
+    logger.error(err);
+    return res.sendStatus(500).json({ error: 'Something went wrong' });
   }
 };
 
@@ -49,7 +142,7 @@ const getTrophiesFromNameAndSeason = async (req: Request, res: Response) => {
   try {
     const player = await Player.findOneOrFail({
       where: {
-        name,
+        uno: name,
       },
       relations: ['trophies', 'trophies.match'],
     });
@@ -103,6 +196,8 @@ const router = Router();
 
 router.get('/', getTrophies);
 router.get('/:season', getTrophiesBySeasonForPlayers);
+router.get('/match/:season', getTrophiesWithMatchBySeason);
+router.get('/match/:uno/:season', getTrophiesWithMatchBySeasonAndPlayer);
 router.get('/:name/:season', getTrophiesFromNameAndSeason);
 router.get('/uno/:uno/:season', getTrophiesFromUnoAndSeason);
 router.delete('/:id', deleteTrophy);

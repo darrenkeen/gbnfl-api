@@ -4,6 +4,8 @@ import playerRoutes from './players';
 import dataRoutes from './data';
 import cacheRoutes from './cache';
 import matchesRoutes from './matches';
+import lifetimeRoutes from './lifetime';
+import weeklyRoutes from './weekly';
 import { registerMiddleware } from '../config/middleware';
 
 export function initRestRoutes(router: Router): void {
@@ -14,4 +16,6 @@ export function initRestRoutes(router: Router): void {
   router.use(`${prefix}/data`, dataRoutes);
   router.use(`${prefix}/cache`, cacheRoutes);
   router.use(`${prefix}/matches`, matchesRoutes);
+  router.use(`${prefix}/lifetime`, lifetimeRoutes);
+  router.use(`${prefix}/weekly`, weeklyRoutes);
 }
