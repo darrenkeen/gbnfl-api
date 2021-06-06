@@ -2,6 +2,10 @@
    "name": "gbnfl",
    "version": "2.2.0",
    "description": "The GBNFL.",
+   "repository": {
+      "type": "git",
+      "url": "https://github.com/darrenkeen/gbnfl-api.git"
+    },
    "devDependencies": {
       "@types/apicache": "~1.2.2",
       "@types/bcrypt": "~3.0.0",
