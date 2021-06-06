@@ -54,6 +54,7 @@
       "build": "tsc",
       "dev": "nodemon --exec ts-node src/index.ts",
       "typeorm": "ts-node ./node_modules/typeorm/cli.js",
-      "test": "jest"
+      "test": "jest",
+      "release": "np --no-tests"
    }
 }
