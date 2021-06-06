@@ -164,20 +164,16 @@ const trackMatch = async (_: Request, res: Response) => {
                 id: player.id,
               },
             },
+            order: {
+              updatedAt: 'DESC',
+            },
           });
 
-          if (currentLifetime) {
-            const del = await LifetimePlayer.update(currentLifetime.id, brData);
-            if (
-              typeof del.affected !== 'undefined' &&
-              del.affected !== null &&
-              del.affected < 1
-            ) {
-              logger.error(
-                `There was a problem updating ${currentLifetime.player.platformId} lifetime`
-              );
-            }
-          } else {
+          if (
+            (currentLifetime &&
+              Number(currentLifetime.kdRatio) !== brData.kdRatio) ||
+            !currentLifetime
+          ) {
             const lifetimeEntry = new LifetimePlayer({ ...brData, player });
             await lifetimeEntry.save();
           }

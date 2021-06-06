@@ -12,6 +12,9 @@ const getLifetimePlayer = async (req: Request, res: Response) => {
       where: (queryBuilder: SelectQueryBuilder<LifetimePlayer>) => {
         queryBuilder.where('player.uno = :uno', { uno });
       },
+      order: {
+        updatedAt: 'DESC',
+      },
       relations: ['player'],
     });
     return res.json({ data: lifetimeData });
