@@ -34,7 +34,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: user/gbnfl-api:latest
+          tags: darrenkeenfanduel/gbnfl-api:latest
       -
         name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
