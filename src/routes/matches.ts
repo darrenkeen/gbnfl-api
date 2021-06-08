@@ -171,7 +171,7 @@ const trackMatch = async (_: Request, res: Response) => {
 
           if (
             (currentLifetime &&
-              Number(currentLifetime.kdRatio) !== brData.kdRatio) ||
+              brData.gamesPlayed !== currentLifetime.gamesPlayed) ||
             !currentLifetime
           ) {
             const lifetimeEntry = new LifetimePlayer({ ...brData, player });

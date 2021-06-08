@@ -59,7 +59,7 @@ const getMatchData = async (req: Request, res: Response) => {
 
 const testing = async (_: Request, res: Response) => {
   try {
-    const data = await API.MWFullMatchInfowz('183624281502880627', 'all');
+    const data = await API.MWwz('topgunrowan', 'xbl');
 
     return res.json({ data });
   } catch (e) {
