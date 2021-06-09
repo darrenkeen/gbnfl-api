@@ -4,6 +4,8 @@ import { logger } from '../config/logger';
 import { SEASON_START_END } from '../constants';
 import { Player } from '../entities/Player';
 import { Trophy } from '../entities/Trophy';
+import lastUpdated from '../middleware/lastUpdated';
+import { buildLastUpdatedResponse } from '../utils/buildResponse';
 import { getPlayerData } from '../utils/getPlayerData';
 
 const getTrophies = async (_: Request, res: Response) => {
@@ -53,7 +55,7 @@ const getTrophiesWithMatchBySeason = async (req: Request, res: Response) => {
       return acc;
     }, [] as Array<Partial<Trophy> & { players: Player[] }>);
 
-    return res.json({ data: dataWithoutDuplicates });
+    return res.json(buildLastUpdatedResponse(res, dataWithoutDuplicates));
   } catch (err) {
     logger.error(err);
     return res.sendStatus(500).json({ error: 'Something went wrong' });
@@ -103,7 +105,7 @@ const getTrophiesWithMatchBySeasonAndPlayer = async (
       return acc;
     }, [] as Array<Partial<Trophy> & { players: Player[] }>);
 
-    return res.json({ data: dataWithoutDuplicates });
+    return res.json(buildLastUpdatedResponse(res, dataWithoutDuplicates));
   } catch (err) {
     logger.error(err);
     return res.sendStatus(500).json({ error: 'Something went wrong' });
@@ -131,8 +133,11 @@ const getTrophiesBySeasonForPlayers = async (req: Request, res: Response) => {
   }
 
   return res.json(
-    data.sort((a: { trophyCount: number }, b: { trophyCount: number }) =>
-      a.trophyCount > b.trophyCount ? -1 : 0
+    buildLastUpdatedResponse(
+      res,
+      data.sort((a: { trophyCount: number }, b: { trophyCount: number }) =>
+        a.trophyCount > b.trophyCount ? -1 : 0
+      )
     )
   );
 };
@@ -195,9 +200,13 @@ const deleteTrophy = async (req: Request, res: Response) => {
 const router = Router();
 
 router.get('/', getTrophies);
-router.get('/:season', getTrophiesBySeasonForPlayers);
-router.get('/match/:season', getTrophiesWithMatchBySeason);
-router.get('/match/:uno/:season', getTrophiesWithMatchBySeasonAndPlayer);
+router.get('/:season', lastUpdated, getTrophiesBySeasonForPlayers);
+router.get('/match/:season', lastUpdated, getTrophiesWithMatchBySeason);
+router.get(
+  '/match/:uno/:season',
+  lastUpdated,
+  getTrophiesWithMatchBySeasonAndPlayer
+);
 router.get('/:name/:season', getTrophiesFromNameAndSeason);
 router.get('/uno/:uno/:season', getTrophiesFromUnoAndSeason);
 router.delete('/:id', deleteTrophy);

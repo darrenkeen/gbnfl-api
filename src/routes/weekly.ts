@@ -3,6 +3,8 @@ import { getRepository, SelectQueryBuilder } from 'typeorm';
 
 import { logger } from '../config/logger';
 import { WeeklyMode } from '../entities/WeeklyMode';
+import lastUpdated from '../middleware/lastUpdated';
+import { buildLastUpdatedResponse } from '../utils/buildResponse';
 
 const getWeeklyPlayer = async (req: Request, res: Response) => {
   const { uno } = req.params;
@@ -16,7 +18,7 @@ const getWeeklyPlayer = async (req: Request, res: Response) => {
       relations: ['player'],
     });
 
-    return res.json({ data: { modes: weeklyData } });
+    return res.json(buildLastUpdatedResponse(res, { modes: weeklyData }));
   } catch (e) {
     logger.error(e);
     return res.status(404).json({ error: 'Weekly not found', uno });
@@ -50,7 +52,7 @@ const getWeeklyLeaderboard = async (_: Request, res: Response) => {
       .leftJoinAndSelect('weekly.player', 'player')
       .getOne();
 
-    return res.json({ data: { kdRatioMax, killsMax } });
+    return res.json(buildLastUpdatedResponse(res, { kdRatioMax, killsMax }));
   } catch (e) {
     logger.error(e);
     return res.status(404).json({ error: 'Not found' });
@@ -59,7 +61,7 @@ const getWeeklyLeaderboard = async (_: Request, res: Response) => {
 
 const router = Router();
 
-router.get('/leaderboard', getWeeklyLeaderboard);
-router.get('/:uno', getWeeklyPlayer);
+router.get('/leaderboard', lastUpdated, getWeeklyLeaderboard);
+router.get('/:uno', lastUpdated, getWeeklyPlayer);
 
 export default router;
