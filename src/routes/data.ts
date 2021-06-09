@@ -8,6 +8,7 @@ import cacheTimestamp from '../middleware/cacheTimestamp';
 import { buildResponse } from '../utils/buildResponse';
 import { buildMatchData } from '../utils/buildMatchData';
 import { SEASON_START_END } from '../constants';
+import { MatchTrack } from '../entities/MatchTrack';
 const API = require('call-of-duty-api')();
 
 const getAvailableSeasons = (_: Request, res: Response) => {
@@ -59,7 +60,8 @@ const getMatchData = async (req: Request, res: Response) => {
 
 const testing = async (_: Request, res: Response) => {
   try {
-    const data = await API.MWFullMatchInfowz('183624281502880627', 'all');
+    // const data = await API.MWwz('topgunrowan', 'xbl');
+    const data = await MatchTrack.find();
 
     return res.json({ data });
   } catch (e) {

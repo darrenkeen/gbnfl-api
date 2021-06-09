@@ -17,6 +17,9 @@ import { logger } from '../config/logger';
 import { LifetimePlayer } from '../entities/LifetimePlayer';
 import { mapWeeklyData } from '../utils/mapWeeklyData';
 import { WeeklyMode } from '../entities/WeeklyMode';
+import { MatchTrack } from '../entities/MatchTrack';
+import { buildLastUpdatedResponse } from '../utils/buildResponse';
+import lastUpdated from '../middleware/lastUpdated';
 
 const API = require('call-of-duty-api')();
 
@@ -57,12 +60,12 @@ const getSingleMatch = async (req: Request, res: Response) => {
       );
       return { ...team, ...stats };
     });
-    return res.json({
-      data: {
+    return res.json(
+      buildLastUpdatedResponse(res, {
         ...matchData,
         teams: [...teamWithStats],
-      },
-    });
+      })
+    );
   } catch (e) {
     logger.error(e);
     return res.send(404).json({ error: 'Match not found' });
@@ -84,7 +87,7 @@ const getMatchesBySeason = async (req: Request, res: Response) => {
       },
       relations: ['trophies', 'trophies.player', 'teams', 'teams.players'],
     });
-    return res.json({ data: matchData });
+    return res.json(buildLastUpdatedResponse(res, matchData));
   } catch (e) {
     logger.error(e);
     return res.sendStatus(500).json({ error: e });
@@ -120,13 +123,9 @@ const getMatchesForPlayerWithSkip = async (req: Request, res: Response) => {
       .limit(10)
       .getMany();
 
-    // const matchData = await MatchDataPlayer.find({
-    //   where: {
-    //     uno,
-    //   },
-    //   relations: ['team', 'team.match'],
-    // });
-    return res.json({ data: { matches: matchData, totalMatches: count } });
+    return res.json(
+      buildLastUpdatedResponse(res, { matches: matchData, totalMatches: count })
+    );
   } catch (e) {
     logger.error(e);
     return res.send(500).json({ error: e });
@@ -171,7 +170,7 @@ const trackMatch = async (_: Request, res: Response) => {
 
           if (
             (currentLifetime &&
-              Number(currentLifetime.kdRatio) !== brData.kdRatio) ||
+              brData.gamesPlayed !== currentLifetime.gamesPlayed) ||
             !currentLifetime
           ) {
             const lifetimeEntry = new LifetimePlayer({ ...brData, player });
@@ -587,6 +586,13 @@ const trackMatch = async (_: Request, res: Response) => {
         });
       })
     );
+    const matchTrachCache = await MatchTrack.findOne();
+    if (!matchTrachCache) {
+      const newMatchTrack = new MatchTrack({});
+      await newMatchTrack.save();
+    } else {
+      await MatchTrack.update(matchTrachCache.id, {});
+    }
     logger.info(
       `Track Match: Updated ${Object.keys(winData).length} wins and ${
         Object.keys(lostData).length
@@ -602,8 +608,12 @@ const trackMatch = async (_: Request, res: Response) => {
 const router = Router();
 
 router.get('/track-match', cache('5 minutes'), auth, trackMatch);
-router.get('/:season', getMatchesBySeason);
-router.get('/uno/:uno/start/:startSeconds', getMatchesForPlayerWithSkip);
+router.get('/:season', lastUpdated, getMatchesBySeason);
+router.get(
+  '/uno/:uno/start/:startSeconds',
+  lastUpdated,
+  getMatchesForPlayerWithSkip
+);
 router.get('/id/:matchDataId', getSingleMatch);
 router.get('/', getMatches);
 

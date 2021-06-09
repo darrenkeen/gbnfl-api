@@ -2,6 +2,8 @@ import { Request, Response, Router } from 'express';
 import { SelectQueryBuilder } from 'typeorm';
 import { logger } from '../config/logger';
 import { LifetimePlayer } from '../entities/LifetimePlayer';
+import lastUpdated from '../middleware/lastUpdated';
+import { buildLastUpdatedResponse } from '../utils/buildResponse';
 
 const getLifetimePlayer = async (req: Request, res: Response) => {
   const { uno } = req.params;
@@ -17,7 +19,7 @@ const getLifetimePlayer = async (req: Request, res: Response) => {
       },
       relations: ['player'],
     });
-    return res.json({ data: lifetimeData });
+    return res.json(buildLastUpdatedResponse(res, lifetimeData));
   } catch (e) {
     logger.error(e);
     return res.status(404).json({ error: 'Match not found', uno });
@@ -26,6 +28,6 @@ const getLifetimePlayer = async (req: Request, res: Response) => {
 
 const router = Router();
 
-router.get('/:uno', getLifetimePlayer);
+router.get('/:uno', lastUpdated, getLifetimePlayer);
 
 export default router;
