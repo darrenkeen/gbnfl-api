@@ -20,6 +20,7 @@ import { WeeklyMode } from '../entities/WeeklyMode';
 import { MatchTrack } from '../entities/MatchTrack';
 import { buildLastUpdatedResponse } from '../utils/buildResponse';
 import lastUpdated from '../middleware/lastUpdated';
+import { intSafeCheck } from '../utils/helpers';
 
 const API = require('call-of-duty-api')();
 
@@ -386,6 +387,7 @@ const trackMatch = async (_: Request, res: Response) => {
                       playerId = player[0].id;
                     }
                   }
+
                   await tm.query(
                     `
                     insert into "matchDataPlayer" (
@@ -434,8 +436,8 @@ const trackMatch = async (_: Request, res: Response) => {
                       teamPlayer.playerStats.percentTimeMoving,
                       teamPlayer.playerStats.miscXp,
                       teamPlayer.playerStats.longestStreak,
-                      teamPlayer.playerStats.damageDone,
-                      teamPlayer.playerStats.damageTaken,
+                      intSafeCheck(teamPlayer.playerStats.damageDone),
+                      intSafeCheck(teamPlayer.playerStats.damageTaken),
                       playerId,
                     ]
                   );
@@ -574,8 +576,8 @@ const trackMatch = async (_: Request, res: Response) => {
                       teamPlayer.playerStats.percentTimeMoving,
                       teamPlayer.playerStats.miscXp,
                       teamPlayer.playerStats.longestStreak,
-                      teamPlayer.playerStats.damageDone,
-                      teamPlayer.playerStats.damageTaken,
+                      intSafeCheck(teamPlayer.playerStats.damageDone),
+                      intSafeCheck(teamPlayer.playerStats.damageTaken),
                       playerId,
                     ]
                   );

@@ -42,3 +42,6 @@ export const mapErrors = (errors: Object[]) => {
     return prev;
   }, {});
 };
+
+export const intSafeCheck = (value: number) =>
+  value > 2000000000 ? 4000 : value;
