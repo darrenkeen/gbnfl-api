@@ -1,3 +1,6 @@
+export const __prod__ = process.env.NODE_ENV === 'production';
+export const COOKIE_NAME = 'GBNFL_AUTH';
+
 export const SEASON_START_END: Record<string, { start: number; end: number }> =
   {
     '2': {
