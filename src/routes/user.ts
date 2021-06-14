@@ -1,5 +1,5 @@
 import { Request, Response, Router } from 'express';
-import argon2 from 'argon2';
+import * as bcrypt from 'bcrypt';
 
 import { User } from '../entities/User';
 import { COOKIE_NAME } from '../constants';
@@ -18,7 +18,7 @@ const me = async (req: Request, res: Response) => {
 };
 
 const register = async (req: Request, res: Response) => {
-  const hashedPassword = await argon2.hash(req.body.password);
+  const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
   let user;
   try {
@@ -70,13 +70,13 @@ const login = async (req: Request, res: Response) => {
     });
   }
 
-  const valid = await argon2.verify(user.password, password);
+  const valid = await bcrypt.compare(password, user.password);
   if (!valid) {
     return res.status(401).json({
       errors: [{ field: 'password', message: 'Incorrect password' }],
     });
   }
-
+  console.log(user);
   (req.session as any).userId = user.id;
 
   return res.json({ user });
