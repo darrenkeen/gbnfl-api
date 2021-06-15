@@ -9,26 +9,12 @@ import { json, NextFunction, Request, Response, Router } from 'express';
 import { logger } from './logger';
 import { COOKIE_NAME, __prod__ } from '../constants';
 
-const allowedOrigins = ['https://gbnfl-git-develop-darrenkeen1.vercel.app'];
-
 export function registerMiddleware(router: Router): void {
   router.use(json());
   router.use(
     cors({
       credentials: true,
-      origin: function (origin, callback) {
-        if (!origin) return callback(null, true);
-        if (
-          allowedOrigins.indexOf(origin) === -1 &&
-          origin !== process.env.ORIGIN
-        ) {
-          var msg =
-            'The CORS policy for this site does not ' +
-            'allow access from the specified Origin.';
-          return callback(new Error(msg), false);
-        }
-        return callback(null, true);
-      },
+      origin: process.env.ORIGIN,
     })
   );
   router.use(compression());
@@ -46,8 +32,8 @@ export function registerMiddleware(router: Router): void {
       cookie: {
         maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years
         httpOnly: false,
-        secure: __prod__, // Only in HTTPS
-        domain: __prod__ ? '.darrenn.co.uk' : undefined,
+        // secure: __prod__, // Only in HTTPS
+        domain: __prod__ ? undefined : undefined,
       },
       saveUninitialized: false,
       secret: process.env.SESSION_SECRET!,

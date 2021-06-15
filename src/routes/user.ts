@@ -76,7 +76,6 @@ const login = async (req: Request, res: Response) => {
       errors: [{ field: 'password', message: 'Incorrect password' }],
     });
   }
-  console.log(user);
   (req.session as any).userId = user.id;
 
   return res.json({ user });
@@ -106,7 +105,13 @@ const updateUser = async (req: Request, res: Response) => {
       throw new Error('No player');
     });
 
-    await User.update(body.id, { player });
+    let additonalUpdates: Partial<User> = {};
+
+    if (body.email) {
+      additonalUpdates.email = body.email;
+    }
+
+    await User.update(body.id, { ...additonalUpdates, player });
     return res.json({ text: 'Updated' });
   } catch (e) {
     return res.status(404).json({ error: e });

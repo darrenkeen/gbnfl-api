@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer';
 import { Entity as TOEntity, Column, OneToOne, JoinColumn } from 'typeorm';
 import Entity from './Entity';
 import { Player } from './Player';
@@ -11,6 +12,7 @@ export class User extends Entity {
   @Column({ unique: true })
   email: string;
 
+  @Exclude()
   @Column()
   password: string;
 
