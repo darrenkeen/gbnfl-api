@@ -4,9 +4,11 @@ import {
   OneToMany,
   Index,
   OneToOne,
+  JoinColumn,
 } from 'typeorm';
 import Entity from './Entity';
 import { MatchDataPlayer } from './MatchDataPlayer';
+import { OverallGoal } from './OverallGoal';
 import { Trophy } from './Trophy';
 import { User } from './User';
 
@@ -42,7 +44,14 @@ export class Player extends Entity {
   matches: MatchDataPlayer[];
 
   @OneToOne(() => User, (user) => user.player, { nullable: true })
+  @JoinColumn()
   user: User;
+
+  @OneToOne(() => OverallGoal, (overallGoal) => overallGoal.player, {
+    nullable: true,
+  })
+  @JoinColumn()
+  overallGoal: OverallGoal;
 
   public static mockTestUser(passedPlayer: Partial<Player>): Player {
     const player = new Player(passedPlayer);

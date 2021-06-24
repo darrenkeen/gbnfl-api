@@ -8,8 +8,9 @@ import cacheTimestamp from '../middleware/cacheTimestamp';
 import { buildResponse } from '../utils/buildResponse';
 import { buildMatchData } from '../utils/buildMatchData';
 import { SEASON_START_END } from '../constants';
-import { MatchTrack } from '../entities/MatchTrack';
-const API = require('call-of-duty-api')();
+import { Player } from '../entities/Player';
+import { SelectQueryBuilder } from 'typeorm';
+const API = require('../API.js')();
 
 const getAvailableSeasons = (_: Request, res: Response) => {
   return res.json({ data: SEASON_START_END });
@@ -60,8 +61,13 @@ const getMatchData = async (req: Request, res: Response) => {
 
 const testing = async (_: Request, res: Response) => {
   try {
-    // const data = await API.MWwz('topgunrowan', 'xbl');
-    const data = await MatchTrack.find();
+    const data = await Player.findOneOrFail({
+      join: { alias: 'player', innerJoin: { user: 'player.user' } },
+      where: (queryBuilder: SelectQueryBuilder<any>) => {
+        queryBuilder.where('user.id = :id', { id: 'B39kYSMbyp' });
+      },
+      relations: ['user'],
+    });
 
     return res.json({ data });
   } catch (e) {

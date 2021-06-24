@@ -22,7 +22,7 @@ export class User extends Entity {
   @Column()
   lastName: string;
 
-  @OneToOne(() => Player, { nullable: true })
+  @OneToOne(() => Player, (player) => player.user, { nullable: true })
   @JoinColumn()
   player: Player;
 }

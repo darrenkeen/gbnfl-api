@@ -8,6 +8,7 @@ import lifetimeRoutes from './lifetime';
 import weeklyRoutes from './weekly';
 import seasonRoutes from './season';
 import userRoutes from './user';
+import overallGoalRoutes from './overallGoal';
 import { registerMiddleware } from '../config/middleware';
 
 export function initRestRoutes(router: Router): void {
@@ -22,4 +23,5 @@ export function initRestRoutes(router: Router): void {
   router.use(`${prefix}/weekly`, weeklyRoutes);
   router.use(`${prefix}/season`, seasonRoutes);
   router.use(`${prefix}/user`, userRoutes);
+  router.use(`${prefix}/overall-goal`, overallGoalRoutes);
 }

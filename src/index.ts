@@ -10,6 +10,12 @@ import path from 'path';
 import { logger } from './config/logger';
 import { Server } from './config/server';
 
+declare module 'express-session' {
+  interface SessionData {
+    userId?: string;
+  }
+}
+
 dotenv.config();
 
 // Startup

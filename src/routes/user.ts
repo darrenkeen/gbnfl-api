@@ -76,7 +76,7 @@ const login = async (req: Request, res: Response) => {
       errors: [{ field: 'password', message: 'Incorrect password' }],
     });
   }
-  (req.session as any).userId = user.id;
+  req.session.userId = user.id;
 
   return res.json({ user });
 };

@@ -1,7 +1,9 @@
 import { isEmpty } from 'class-validator';
 import { Request, Response, Router } from 'express';
 import { getRepository } from 'typeorm';
+import { logger } from '../config/logger';
 import { Player } from '../entities/Player';
+import { User } from '../entities/User';
 import cacheTimestamp from '../middleware/cacheTimestamp';
 import { buildResponse } from '../utils/buildResponse';
 
@@ -9,7 +11,7 @@ const getPlayers = async (_: Request, res: Response) => {
   try {
     const players = await Player.find({
       order: { createdAt: 'DESC' },
-      relations: ['matches', 'matches.team', 'matches.team.match'],
+      relations: ['user'],
     });
     return res.json(buildResponse(res, players));
   } catch (err) {
@@ -114,8 +116,25 @@ const deletePlayer = async (req: Request, res: Response) => {
 const updatePlayer = async (req: Request, res: Response) => {
   const { id } = req.params;
   const data = req.body;
+  let user: User | null = null;
+
   try {
-    const del = await Player.update(id, data);
+    if (data.user) {
+      user = await User.findOneOrFail(data.user);
+    }
+  } catch (e) {
+    logger.error(`Can't find user ${data.user}`);
+    return res.status(404).json({ error: `Can't find user ${data.user}` });
+  }
+
+  try {
+    const updateData = {
+      ...data,
+    };
+    if (user) {
+      updateData.user = user;
+    }
+    const del = await Player.update(id, updateData);
     if (
       typeof del.affected !== 'undefined' &&
       del.affected !== null &&

@@ -707,6 +707,27 @@ module.exports = function (config = {}) {
           .catch((e) => reject(e));
       });
     }),
+    (module.MWZProfile = function (gamertag, platform = config.platform) {
+      return new Promise((resolve, reject) => {
+        'steam' === platform &&
+          reject("Steam Doesn't exist for MW. Try `battle` instead."),
+          'battle' === platform &&
+            reject(
+              'Battlenet friends are not supported. Try a different platform.'
+            ),
+          'uno' === platform && (gamertag = _helpers.cleanClientName(gamertag));
+        'uno' === platform && (lookupType = 'id'),
+          ('uno' !== platform && 'acti' !== platform) ||
+            (platform = this.platforms.uno);
+        let urlInput = _helpers.buildUri(
+          `stats/cod/v1/title/mw/platform/xbl/gamer/topgunrowan/profile/type/mp`
+        );
+        _helpers
+          .sendRequest(urlInput)
+          .then((data) => resolve(data))
+          .catch((e) => reject(e));
+      });
+    }),
     (module.MWstats = function (gamertag, platform = config.platform) {
       return new Promise((resolve, reject) => {
         'steam' === platform &&
