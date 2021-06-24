@@ -10,7 +10,7 @@ import { buildMatchData } from '../utils/buildMatchData';
 import { SEASON_START_END } from '../constants';
 import { Player } from '../entities/Player';
 import { SelectQueryBuilder } from 'typeorm';
-const API = require('../API.js')();
+const API = require('call-of-duty-api')();
 
 const getAvailableSeasons = (_: Request, res: Response) => {
   return res.json({ data: SEASON_START_END });
