@@ -17,12 +17,11 @@ const getLifetimePlayer = async (req: Request, res: Response) => {
       order: {
         updatedAt: 'DESC',
       },
-      relations: ['player'],
     });
     return res.json(buildLastUpdatedResponse(res, lifetimeData));
   } catch (e) {
     logger.error(e.message);
-    return res.status(404).json({ error: 'Match not found', uno });
+    return res.status(404).json({ error: 'Lifetime not found', uno });
   }
 };
 
