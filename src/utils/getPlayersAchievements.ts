@@ -7,14 +7,18 @@ import { getAchievedWhenRowModifier } from './achievements/row';
 
 export const getPlayersAchievements = (
   achievement: Achievement,
-  matches: MatchData[],
+  matches: { withSolos: MatchData[]; withoutSolos: MatchData[] },
   player: Player
 ) => {
   let achieved = false;
 
   switch (achievement.modifierType) {
     case AchievementModifierType.Achieve: {
-      achieved = getAchievedWhenAchieveModifier(matches, achievement, player);
+      achieved = getAchievedWhenAchieveModifier(
+        matches.withSolos,
+        achievement,
+        player
+      );
       break;
     }
     case AchievementModifierType.Row: {
@@ -22,11 +26,22 @@ export const getPlayersAchievements = (
       break;
     }
     case AchievementModifierType.Last: {
-      const lastMatches =
-        matches.length > achievement.modifier
-          ? matches.slice(0, achievement.modifier)
-          : matches;
-      achieved = getAchievedWhenLastModifier(lastMatches, achievement, player);
+      const withSoloslastMatches =
+        matches.withSolos.length > achievement.modifier
+          ? matches.withSolos.slice(0, achievement.modifier)
+          : matches.withSolos;
+      const withoutSoloslastMatches =
+        matches.withoutSolos.length > achievement.modifier
+          ? matches.withoutSolos.slice(0, achievement.modifier)
+          : matches.withoutSolos;
+      achieved = getAchievedWhenLastModifier(
+        {
+          withSolos: withSoloslastMatches,
+          withoutSolos: withoutSoloslastMatches,
+        },
+        achievement,
+        player
+      );
     }
   }
   return achieved;

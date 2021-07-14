@@ -530,14 +530,22 @@ describe('getPlayersAchievements', () => {
         matchPlayer.kills = 9;
         matchPlayer2.kills = 10;
         expect(
-          getPlayersAchievements(mockAchievements[0], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[0],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(true);
       });
       it('should return false', () => {
         matchPlayer.kills = 1;
         matchPlayer2.kills = 1;
         expect(
-          getPlayersAchievements(mockAchievements[0], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[0],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(false);
       });
     });
@@ -545,21 +553,33 @@ describe('getPlayersAchievements', () => {
       it('should return true when highest', () => {
         matchPlayer.kills = 10;
         expect(
-          getPlayersAchievements(mockAchievements[1], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[1],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(true);
       });
       it('should return false when not highest', () => {
         matchPlayer.kills = 1;
         matchPlayer2.kills = 1;
         expect(
-          getPlayersAchievements(mockAchievements[0], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[0],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(false);
       });
       it('should return false when joint highest', () => {
         matchPlayer.kills = 3;
         matchPlayer2.kills = 3;
         expect(
-          getPlayersAchievements(mockAchievements[0], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[0],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(false);
       });
     });
@@ -568,14 +588,22 @@ describe('getPlayersAchievements', () => {
         matchPlayer.gulagKills = 0;
         matchPlayer2.gulagKills = 1;
         expect(
-          getPlayersAchievements(mockAchievements[2], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[2],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(true);
       });
       it('should return false when not won', () => {
         matchPlayer.gulagKills = 0;
         matchPlayer2.gulagKills = 0;
         expect(
-          getPlayersAchievements(mockAchievements[2], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[2],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(false);
       });
     });
@@ -584,14 +612,22 @@ describe('getPlayersAchievements', () => {
         mockMatches[0].teams[1].teamPlacement = 2;
         mockMatches[1].teams[1].teamPlacement = 1;
         expect(
-          getPlayersAchievements(mockAchievements[3], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[3],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(true);
       });
       it('should return false when not won', () => {
         mockMatches[0].teams[1].teamPlacement = 2;
         mockMatches[1].teams[1].teamPlacement = 2;
         expect(
-          getPlayersAchievements(mockAchievements[3], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[3],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(false);
       });
     });
@@ -600,21 +636,37 @@ describe('getPlayersAchievements', () => {
         mockMatches[0].teams[1].teamPlacement = 10;
         mockMatches[1].teams[1].teamPlacement = 11;
         expect(
-          getPlayersAchievements(mockAchievements[4], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[4],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(true);
         mockMatches[0].teams[1].teamPlacement = 9;
         expect(
-          getPlayersAchievements(mockAchievements[4], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[4],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(true);
         mockMatches[0].teams[1].teamPlacement = 1;
         expect(
-          getPlayersAchievements(mockAchievements[4], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[4],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(true);
       });
       it('should return false when not in top 10', () => {
         mockMatches[0].teams[1].teamPlacement = 11;
         expect(
-          getPlayersAchievements(mockAchievements[4], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[4],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(false);
       });
     });
@@ -779,20 +831,32 @@ describe('getPlayersAchievements', () => {
     describe(`5 in a Row kills value 5`, () => {
       it('should return true when in achieved', () => {
         expect(
-          getPlayersAchievements(mockAchievements[5], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[5],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(true);
       });
 
       it('should return true when in achieved', () => {
         mockMatches[0].teams[1].players[1].kills = 5;
         expect(
-          getPlayersAchievements(mockAchievements[5], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[5],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(true);
       });
       it('should return false when not achieved', () => {
         mockMatches[0].teams[1].players[1].kills = 4;
         expect(
-          getPlayersAchievements(mockAchievements[5], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[5],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(false);
       });
     });
@@ -804,12 +868,36 @@ describe('getPlayersAchievements', () => {
         mockMatches[3].teams[1].players[1].kills = 100;
         mockMatches[4].teams[1].players[1].kills = 100;
         expect(
-          getPlayersAchievements(mockAchievements[6], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[6],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(true);
       });
       it('should return false when not achieved', () => {
         expect(
-          getPlayersAchievements(mockAchievements[6], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[6],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
+        ).toEqual(false);
+      });
+      it('should ignore matches with teams under 2 players', () => {
+        mockMatches[0].teams[1].players[1].kills = 100;
+        mockMatches[1].teams[1].players[1].kills = 100;
+        mockMatches[1].teams[1].players = [mockMatches[1].teams[1].players[1]];
+        mockMatches[2].teams[1].players[1].kills = 100;
+        mockMatches[3].teams[1].players[1].kills = 100;
+        mockMatches[4].teams[1].players[1].kills = 100;
+        mockMatches[5] = mockMatches[1];
+        expect(
+          getPlayersAchievements(
+            mockAchievements[6],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(false);
       });
     });
@@ -821,7 +909,11 @@ describe('getPlayersAchievements', () => {
         mockMatches[3].teams[1].players[1].gulagKills = 1;
         mockMatches[4].teams[1].players[1].gulagKills = 1;
         expect(
-          getPlayersAchievements(mockAchievements[7], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[7],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(true);
       });
       it('should return false when not achieved', () => {
@@ -831,7 +923,11 @@ describe('getPlayersAchievements', () => {
         mockMatches[0].teams[1].players[1].gulagKills = 1;
         mockMatches[1].teams[1].players[1].gulagKills = 1;
         expect(
-          getPlayersAchievements(mockAchievements[7], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[7],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(false);
       });
     });
@@ -843,7 +939,11 @@ describe('getPlayersAchievements', () => {
         mockMatches[3].teams[1].teamPlacement = 10;
         mockMatches[4].teams[1].teamPlacement = 10;
         expect(
-          getPlayersAchievements(mockAchievements[8], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[8],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(true);
       });
       it('should return false when not achieved', () => {
@@ -853,7 +953,11 @@ describe('getPlayersAchievements', () => {
         mockMatches[3].teams[1].teamPlacement = 11;
         mockMatches[4].teams[1].teamPlacement = 11;
         expect(
-          getPlayersAchievements(mockAchievements[8], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[8],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(false);
       });
     });
@@ -865,7 +969,11 @@ describe('getPlayersAchievements', () => {
         mockMatches[3].teams[1].teamPlacement = 1;
         mockMatches[4].teams[1].teamPlacement = 1;
         expect(
-          getPlayersAchievements(mockAchievements[9], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[9],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(true);
       });
       it('should return false when not achieved', () => {
@@ -875,7 +983,11 @@ describe('getPlayersAchievements', () => {
         mockMatches[3].teams[1].teamPlacement = 11;
         mockMatches[4].teams[1].teamPlacement = 11;
         expect(
-          getPlayersAchievements(mockAchievements[9], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[9],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(false);
       });
     });
@@ -1075,7 +1187,11 @@ describe('getPlayersAchievements', () => {
         mockMatches[3].teams[1].players[1].kills = 10;
         mockMatches[4].teams[1].players[1].kills = 10;
         expect(
-          getPlayersAchievements(mockAchievements[10], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[10],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(true);
         mockMatches[0].teams[1].players[1].kills = 0;
         mockMatches[1].teams[1].players[1].kills = 0;
@@ -1084,13 +1200,21 @@ describe('getPlayersAchievements', () => {
         mockMatches[4].teams[1].players[1].kills = 0;
         mockMatches[5].teams[1].players[1].kills = 25;
         expect(
-          getPlayersAchievements(mockAchievements[10], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[10],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(true);
       });
       it('should return false when not achieved', () => {
         mockMatches[0].teams[1].players[1].kills = 9;
         expect(
-          getPlayersAchievements(mockAchievements[10], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[10],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(false);
       });
     });
@@ -1102,17 +1226,29 @@ describe('getPlayersAchievements', () => {
         mockMatches[3].teams[1].players[1].kills = 100;
         mockMatches[4].teams[1].players[1].kills = 100;
         expect(
-          getPlayersAchievements(mockAchievements[11], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[11],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(true);
         mockMatches[3].teams[1].players[1].kills = 10;
         mockMatches[5].teams[1].players[1].kills = 100;
         expect(
-          getPlayersAchievements(mockAchievements[11], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[11],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(true);
       });
       it('should return false when not achieved', () => {
         expect(
-          getPlayersAchievements(mockAchievements[11], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[11],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(false);
       });
     });
@@ -1124,12 +1260,20 @@ describe('getPlayersAchievements', () => {
         mockMatches[3].teams[1].players[1].gulagKills = 1;
         mockMatches[4].teams[1].players[1].gulagKills = 1;
         expect(
-          getPlayersAchievements(mockAchievements[12], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[12],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(true);
         mockMatches[2].teams[1].players[1].gulagKills = 0;
         mockMatches[5].teams[1].players[1].gulagKills = 1;
         expect(
-          getPlayersAchievements(mockAchievements[12], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[12],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(true);
       });
       it('should return false when not achieved', () => {
@@ -1140,7 +1284,11 @@ describe('getPlayersAchievements', () => {
         mockMatches[4].teams[1].players[1].gulagKills = 1;
         mockMatches[5].teams[1].players[1].gulagKills = 1;
         expect(
-          getPlayersAchievements(mockAchievements[12], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[12],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(false);
       });
     });
@@ -1152,12 +1300,20 @@ describe('getPlayersAchievements', () => {
         mockMatches[3].teams[1].teamPlacement = 10;
         mockMatches[4].teams[1].teamPlacement = 10;
         expect(
-          getPlayersAchievements(mockAchievements[13], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[13],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(true);
         mockMatches[3].teams[1].teamPlacement = 11;
         mockMatches[5].teams[1].teamPlacement = 10;
         expect(
-          getPlayersAchievements(mockAchievements[13], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[13],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(true);
       });
       it('should return false when not achieved', () => {
@@ -1167,7 +1323,11 @@ describe('getPlayersAchievements', () => {
         mockMatches[3].teams[1].teamPlacement = 11;
         mockMatches[4].teams[1].teamPlacement = 11;
         expect(
-          getPlayersAchievements(mockAchievements[13], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[13],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(false);
       });
     });
@@ -1179,12 +1339,20 @@ describe('getPlayersAchievements', () => {
         mockMatches[3].teams[1].teamPlacement = 1;
         mockMatches[4].teams[1].teamPlacement = 1;
         expect(
-          getPlayersAchievements(mockAchievements[14], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[14],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(true);
         mockMatches[3].teams[1].teamPlacement = 10;
         mockMatches[5].teams[1].teamPlacement = 1;
         expect(
-          getPlayersAchievements(mockAchievements[14], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[14],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(true);
       });
       it('should return false when not achieved', () => {
@@ -1194,7 +1362,11 @@ describe('getPlayersAchievements', () => {
         mockMatches[0].teams[1].teamPlacement = 11;
         mockMatches[1].teams[1].teamPlacement = 11;
         expect(
-          getPlayersAchievements(mockAchievements[14], mockMatches, mockPlayer)
+          getPlayersAchievements(
+            mockAchievements[14],
+            { withSolos: mockMatches, withoutSolos: mockMatches },
+            mockPlayer
+          )
         ).toEqual(false);
       });
     });

@@ -10,7 +10,7 @@ import { buildMatchData } from '../utils/buildMatchData';
 import { SEASON_START_END } from '../constants';
 import { getRepository } from 'typeorm';
 import { MatchData } from '../entities/MatchData';
-const API = require('../API2.js')();
+const API = require('../api.js')();
 
 const getAvailableSeasons = (_: Request, res: Response) => {
   return res.json({ data: SEASON_START_END });

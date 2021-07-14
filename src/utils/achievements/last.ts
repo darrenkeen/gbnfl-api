@@ -48,8 +48,12 @@ export const getIsTopKillerInLast = (
       if (!teamWithPlayer) {
         throw new Error('Player not in match');
       }
+      if (teamWithPlayer.players.length < 2) {
+        return null;
+      }
       return getHighestKillerInTeam(teamWithPlayer, player);
     })
+    .filter((val) => val !== null)
     .filter((isHighest) => isHighest);
 
   achieved = flatTeamStats.length >= modifierRequired;
@@ -130,30 +134,38 @@ export const getIsWinInLast = (
 };
 
 export const getAchievedWhenLastModifier = (
-  matches: MatchData[],
+  matches: { withSolos: MatchData[]; withoutSolos: MatchData[] },
   achievement: Achievement,
   player: Player
 ) => {
   let achieved = false;
   switch (achievement.type) {
     case AchievementType.Kills: {
-      achieved = getIsKillsInLast(matches, achievement.value, player);
+      achieved = getIsKillsInLast(matches.withSolos, achievement.value, player);
       break;
     }
     case AchievementType.Killer: {
-      achieved = getIsTopKillerInLast(matches, achievement.value, player);
+      achieved = getIsTopKillerInLast(
+        matches.withoutSolos,
+        achievement.value,
+        player
+      );
       break;
     }
     case AchievementType.Gulag: {
-      achieved = getIsGulagInLast(matches, achievement.value, player);
+      achieved = getIsGulagInLast(matches.withSolos, achievement.value, player);
       break;
     }
     case AchievementType.TopTen: {
-      achieved = getIsTopTenInLast(matches, achievement.value, player);
+      achieved = getIsTopTenInLast(
+        matches.withSolos,
+        achievement.value,
+        player
+      );
       break;
     }
     case AchievementType.Win: {
-      achieved = getIsWinInLast(matches, achievement.value, player);
+      achieved = getIsWinInLast(matches.withSolos, achievement.value, player);
       break;
     }
   }

@@ -1,4 +1,4 @@
-const API = require('call-of-duty-api')();
+const API = require('../api.js')();
 
 const BR_KEYS = ['br_brtrios', 'br_brsolo', 'br_brduos', 'br_brquads'];
 

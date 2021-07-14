@@ -49,15 +49,20 @@ export const getIsTopKillerInARow = (
 ) => {
   let achieved = false;
 
-  const flatTeamStats = matches.map((match) => {
-    const teamWithPlayer = match.teams.find((team) =>
-      team.players.some((p) => p.uno === player.uno)
-    );
-    if (!teamWithPlayer) {
-      throw new Error('Player not in match');
-    }
-    return getHighestKillerInTeam(teamWithPlayer, player);
-  });
+  const flatTeamStats = matches
+    .map((match) => {
+      const teamWithPlayer = match.teams.find((team) =>
+        team.players.some((p) => p.uno === player.uno)
+      );
+      if (!teamWithPlayer) {
+        throw new Error('Player not in match');
+      }
+      if (teamWithPlayer.players.length < 2) {
+        return null;
+      }
+      return getHighestKillerInTeam(teamWithPlayer, player);
+    })
+    .filter((val) => val !== null);
 
   achieved = checkTruthyInARow(flatTeamStats, rowRequired);
 
@@ -143,7 +148,7 @@ export const getIsKillsInARow = (
 };
 
 export const getAchievedWhenRowModifier = (
-  matches: MatchData[],
+  matches: { withSolos: MatchData[]; withoutSolos: MatchData[] },
   achievement: Achievement,
   player: Player
 ) => {
@@ -151,7 +156,7 @@ export const getAchievedWhenRowModifier = (
   switch (achievement.type) {
     case AchievementType.Kills: {
       achieved = getIsKillsInARow(
-        matches,
+        matches.withSolos,
         achievement.value,
         achievement.modifier,
         player
@@ -159,19 +164,35 @@ export const getAchievedWhenRowModifier = (
       break;
     }
     case AchievementType.Killer: {
-      achieved = getIsTopKillerInARow(matches, achievement.modifier, player);
+      achieved = getIsTopKillerInARow(
+        matches.withoutSolos,
+        achievement.modifier,
+        player
+      );
       break;
     }
     case AchievementType.Gulag: {
-      achieved = getIsGulagInARow(matches, achievement.modifier, player);
+      achieved = getIsGulagInARow(
+        matches.withSolos,
+        achievement.modifier,
+        player
+      );
       break;
     }
     case AchievementType.TopTen: {
-      achieved = getIsTopTenInARow(matches, achievement.modifier, player);
+      achieved = getIsTopTenInARow(
+        matches.withSolos,
+        achievement.modifier,
+        player
+      );
       break;
     }
     case AchievementType.Win: {
-      achieved = getIsWinInARow(matches, achievement.modifier, player);
+      achieved = getIsWinInARow(
+        matches.withSolos,
+        achievement.modifier,
+        player
+      );
       break;
     }
   }

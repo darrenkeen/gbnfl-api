@@ -1,7 +1,7 @@
 import { Request, Response, Router } from 'express';
 import { getRepository, IsNull, Not } from 'typeorm';
 import { logger } from '../config/logger';
-import { TROPHY_MODES } from '../constants';
+import { NON_SOLO_TROPHY_MODES, TROPHY_MODES } from '../constants';
 import { Achievement } from '../entities/Achievement';
 import { AchievementTrack } from '../entities/AchievementTrack';
 import { MatchData } from '../entities/MatchData';
@@ -132,7 +132,6 @@ const createPlayerAchievement = async (req: Request, res: Response) => {
 
 const trackPlayerAchievement = async (_: Request, res: Response) => {
   let achievementTrack: AchievementTrack | null = null;
-  let testRes: any = null;
 
   try {
     achievementTrack = (await AchievementTrack.findOne()) || null;
@@ -142,11 +141,22 @@ const trackPlayerAchievement = async (_: Request, res: Response) => {
 
   console.log(achievementTrack);
 
+  if (!achievementTrack) {
+    try {
+      const newAchievementTrack = new AchievementTrack({});
+      achievementTrack = await newAchievementTrack.save();
+    } catch (e) {
+      logger.error(JSON.stringify(e));
+    }
+  }
+
   if (achievementTrack) {
-    achievementTrack.createdAt;
     let players: Player[] | null = null;
     try {
-      players = await Player.find({ where: { uno: Not(IsNull()) } });
+      players = await Player.find({
+        where: { uno: Not(IsNull()) },
+        relations: ['achievements', 'achievements.achievement'],
+      });
       if (!players || players.length < 1) {
         throw new Error('No players');
       }
@@ -167,8 +177,6 @@ const trackPlayerAchievement = async (_: Request, res: Response) => {
       return res.status(500).json({ error: 'Something went wrong' });
     }
 
-    let data: MatchData[][] = [];
-
     try {
       await Promise.all(
         players.map(async (player) => {
@@ -177,7 +185,7 @@ const trackPlayerAchievement = async (_: Request, res: Response) => {
               new Date(achievementTrack!.updatedAt).getTime() / 1000
             );
 
-            const matchDataQuery = getRepository(MatchData)
+            const matchDataWithSolosQuery = getRepository(MatchData)
               .createQueryBuilder('match')
               .leftJoinAndSelect('match.teams', 'teams')
               .leftJoinAndSelect('teams.players', 'players')
@@ -198,46 +206,91 @@ const trackPlayerAchievement = async (_: Request, res: Response) => {
                 startSeconds,
               });
 
-            const matchData = await matchDataQuery
+            const matchDataWithSolos = await matchDataWithSolosQuery
               .orderBy({
                 'match.utcStartSeconds': 'DESC',
               })
               .take(20)
               .getMany();
 
-            if (matchData.length < 1) {
+            if (matchDataWithSolos.length < 1) {
               return;
             }
 
-            achievements.map((achievement) => {
-              const achieved = getPlayersAchievements(
-                achievement,
-                matchData,
-                player
-              );
-              console.log(achievement.id, achieved, player.name);
-            });
+            const matchDataWithoutSolosQuery = getRepository(MatchData)
+              .createQueryBuilder('match')
+              .leftJoinAndSelect('match.teams', 'teams')
+              .leftJoinAndSelect('teams.players', 'players')
+              .where((qb) => {
+                const subQuery = qb
+                  .subQuery()
+                  .select('match.id')
+                  .from(MatchData, 'match')
+                  .leftJoin('match.teams', 'teams')
+                  .leftJoin('teams.players', 'players')
+                  .where('players.uno = :uno')
+                  .getQuery();
+                return 'match.id IN ' + subQuery;
+              })
+              .setParameter('uno', player.uno)
+              .andWhere('match.mode IN(:...modes)', {
+                modes: NON_SOLO_TROPHY_MODES,
+              })
+              .andWhere('match.utcStartSeconds >= :startSeconds', {
+                startSeconds,
+              });
 
-            // await Promise.all(
-            //   matchData.map(async (m) => {
-            //     const playerTeam = m.teams[0];
-            //     const player = playerTeam.players[0];
-            //     const match = await MatchData.findOne(m.id, {
-            //       relations: ['teams', 'teams.players'],
-            //     });
-            //     if (!match) {
-            //       return;
-            //     }
+            const matchDataWithoutSolos = await matchDataWithoutSolosQuery
+              .orderBy({
+                'match.utcStartSeconds': 'DESC',
+              })
+              .take(20)
+              .getMany();
 
-            //     const team = match.teams.find((t) => t.id === playerTeam.id);
-            //     if (!team) {
-            //       return;
-            //     }
-            //     getPlayersAchievements(achievements, team, player);
-            //   })
-            // );
+            const playerHasAchieved: Achievement[] = [];
+            const playerAlreadyAchieved = player.achievements.map(
+              (ach) => ach.achievement.id
+            );
 
-            // TODO: Upadate track date
+            // TODO: Just need to double check this does what it says on the tin - updatedAt time means no games so not getting this far
+            achievements
+              .filter((ach) => playerAlreadyAchieved.includes(ach.id))
+              .map((achievement) => {
+                if (player.uno === '8457816366480952913') {
+                  console.log(achievement.id);
+                }
+                const achieved = getPlayersAchievements(
+                  achievement,
+                  {
+                    withSolos: matchDataWithSolos,
+                    withoutSolos: matchDataWithoutSolos,
+                  },
+                  player
+                );
+                if (achieved) {
+                  playerHasAchieved.push(achievement);
+                }
+              });
+
+            await Promise.all(
+              playerHasAchieved.map(async (achievement) => {
+                try {
+                  const playerAchievement = new PlayerAchievement({
+                    achievement,
+                    player,
+                  });
+                  const savedPlayerAchievement = await playerAchievement.save();
+
+                  if (!savedPlayerAchievement) {
+                    throw new Error(
+                      `Could not save ${achievement.id} for ${player.uno}`
+                    );
+                  }
+                } catch (e) {
+                  logger.error(JSON.stringify(e));
+                }
+              })
+            );
           } catch (e) {
             logger.error(JSON.stringify(e));
           }
@@ -246,19 +299,17 @@ const trackPlayerAchievement = async (_: Request, res: Response) => {
     } catch (e) {
       logger.error(JSON.stringify(e));
     }
-    if (data.length > 0) {
-      return res.json({ data });
+
+    try {
+      await AchievementTrack.update(achievementTrack.id, {});
+    } catch (e) {
+      logger.error('Couldnt update tracker');
     }
   } else {
-    try {
-      const newAchievementTrack = new AchievementTrack({});
-      await newAchievementTrack.save();
-    } catch (e) {
-      logger.error(JSON.stringify(e));
-    }
+    return res.status(404).json({ error: 'No achievement track' });
   }
 
-  return res.json(testRes);
+  return res.status(202).json();
 };
 
 const router = Router();

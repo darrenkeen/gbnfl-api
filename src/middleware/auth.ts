@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-const API = require('../API2.js')();
+const API = require('../api.js')();
 
 export default async (_: Request, res: Response, next: NextFunction) => {
   try {
