@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-const API = require('call-of-duty-api')();
+const API = require('../API2.js')();
 
 export default async (_: Request, res: Response, next: NextFunction) => {
   try {

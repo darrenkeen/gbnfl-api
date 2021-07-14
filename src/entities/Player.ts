@@ -11,6 +11,7 @@ import { MatchDataPlayer } from './MatchDataPlayer';
 import { OverallGoal } from './OverallGoal';
 import { Trophy } from './Trophy';
 import { User } from './User';
+import { PlayerAchievement } from './PlayerAchievement';
 
 @TOEntity('players')
 export class Player extends Entity {
@@ -52,6 +53,9 @@ export class Player extends Entity {
   })
   @JoinColumn()
   overallGoal: OverallGoal;
+
+  @OneToMany(() => PlayerAchievement, (ua) => ua.player)
+  achievements: PlayerAchievement[];
 
   public static mockTestUser(passedPlayer: Partial<Player>): Player {
     const player = new Player(passedPlayer);

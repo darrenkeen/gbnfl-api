@@ -8,9 +8,9 @@ import cacheTimestamp from '../middleware/cacheTimestamp';
 import { buildResponse } from '../utils/buildResponse';
 import { buildMatchData } from '../utils/buildMatchData';
 import { SEASON_START_END } from '../constants';
-import { Player } from '../entities/Player';
-import { SelectQueryBuilder } from 'typeorm';
-const API = require('call-of-duty-api')();
+import { getRepository } from 'typeorm';
+import { MatchData } from '../entities/MatchData';
+const API = require('../API2.js')();
 
 const getAvailableSeasons = (_: Request, res: Response) => {
   return res.json({ data: SEASON_START_END });
@@ -61,15 +61,31 @@ const getMatchData = async (req: Request, res: Response) => {
 
 const testing = async (_: Request, res: Response) => {
   try {
-    const data = await Player.findOneOrFail({
-      join: { alias: 'player', innerJoin: { user: 'player.user' } },
-      where: (queryBuilder: SelectQueryBuilder<any>) => {
-        queryBuilder.where('user.id = :id', { id: 'B39kYSMbyp' });
-      },
-      relations: ['user'],
-    });
+    const qb = await getRepository(MatchData).createQueryBuilder('match');
+    const matchDataQuery = qb
+      .select('match.id')
+      .leftJoinAndSelect('match.teams', 'teams')
+      .leftJoinAndSelect('teams.players', 'players')
+      .where(
+        'match.id IN' +
+          qb
+            .subQuery()
+            .select('match.id')
+            .from(MatchData, 'match')
+            .leftJoin('match.teams', 'teams')
+            .leftJoin('teams.players', 'players')
+            .where('players.uno = :uno', { uno: '8457816366480952913' })
+            .getQuery()
+      );
 
-    return res.json({ data });
+    const matchData = await matchDataQuery
+      .orderBy({
+        'match.utcStartSeconds': 'DESC',
+      })
+      .limit(20)
+      .getMany();
+
+    return res.json({ matchData });
   } catch (e) {
     console.error(e);
     return res.status(400).json({ error: e });
@@ -80,9 +96,9 @@ const router = Router();
 
 router.get(
   '/latest/:playerId/:platform',
-  auth,
-  cache('5 minutes', onlyStatus200),
-  cacheTimestamp,
+  // auth,
+  // cache('5 minutes', onlyStatus200),
+  // cacheTimestamp,
   getLatestData
 );
 router.get(

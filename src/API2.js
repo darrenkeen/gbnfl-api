@@ -1,7 +1,6 @@
 const axios = require('axios'),
-  uniqid = require('uniqid'),
   rateLimit = require('axios-rate-limit'),
-  crypto = require('crypto'),
+  { login: loginMeth } = require('./login'),
   userAgent = 'a4b471be-4ad2-47e2-ba0e-e1f2aa04bff9';
 let ssoCookie,
   baseCookie =
@@ -22,8 +21,10 @@ let ssoCookie,
   }),
   loginAxios = apiAxios,
   defaultBaseURL = 'https://my.callofduty.com/api/papi-client/',
-  loginURL = 'https://profile.callofduty.com/cod/mapp/',
   defaultProfileURL = 'https://profile.callofduty.com/';
+
+apiAxios.defaults.headers.common.Cookie =
+  'XSRF-TOKEN=t6Z2XamchrSUdqpVeY5qWPvzvCf6j5Ck3XBjxtXK6_uea-ZsPCvGH9sFR71gEZCy; comid=cod; redirectUrl="http://profile.callofduty.com/cod/announcement2FA"; _abck=A305BFD4858D1F5D9D05A9845FEA25F0~0~YAAQLFfdWNhyZJt6AQAAFzZDpQYuQNCMBcF+tg78FWygeSp3wq8Wp+UdEdLmfyMmMBs+IN+zBTzXRXPuBIdXhFEVXZg1HyWWDqnPkF3+7pokihOsVG6jH9+MV0+ncN0RWb0Sgv5LXAGe+LDG7g9yr5GxD38cHoqSncLyC84Oz0nGUMKK2RUnTpGkaweeWFyXRxy0O5LSr2gP5n6m6r079A4/3n7ipBYSRlFd7ikSkj/ENoX0iD95fRjvnFHA0A6yqvKYV1v3HcDSlnFrpMsv0gHWjKuY3Cu5FwKcydnxGlRo51xLnL4PI22n6WNPgP6LHS4cuB90kzaApAsAeKTFJDS+0g1kVLq3vrBXJYeRLm2V+UHIRhTTo0rFRLC6si//LA909LlhRGybj22blZBZTXZdMOczvb7tM4CLNHc=~-1~-1~-1; bm_sz=3A0020AA12F8AC027F8F1A3C43BB38AE~YAAQLFfdWJZxZJt6AQAA4rxBpQwpkl+QKvoJZ4F0JwTt3LgEBHewpJzPkkF2WuZ5bPIDDjt3LtyXs5DgtC1hzuCin7Bv0C0Bj7VrzSJOn+8QYezkfLQs2DaGYdjE8ywEDLVtlcXQMQWczcSnX9+iF0jOW069NQQsXEcIZlZOVTj8lVbuM0CZ97G7O4O4UnLEYr++C7cgNQCsl4TH/bxN4i7NGWmDjGxufTMxssZTZfMOTcTU7zjJDdlHPi94yVNQmjrN+yB9sX+v/GyurLQPjm2t4tG4atEoUNRfguVeFkqTGlOhF0Xz~4273464~3355203; _gcl_au=1.1.983682866.1626270189; AMCVS_0FB367C2524450B90A490D4C%40AdobeOrg=1; gtm.custom.bot.flag=human; new_SiteId=cod; ACT_SSO_LOCALE=en_US; ACT_SSO_COOKIE=ODQ1NzgxNjM2NjQ4MDk1MjkxMzoxNjI3NDc5ODgyOTE5OjYyNDI0ZDIxNTg5NmRkNjVjYTViNjZiNmU1ZDExZjJj; ACT_SSO_COOKIE_EXPIRY=1627479882919; atkn=eyJhbGciOiAiQTEyOEtXIiwgImVuYyI6ICJBMTI4R0NNIiwgImtpZCI6ICJ1bm9fcHJvZF9sYXNfMSJ9.Br54cz6xWaXWfdgWyYH6a1S6hr22p8ujfwiFstH3sik2KJiRvXWo1w.Gk_Smc61p2bG3PMB.3XgjQ-JImr-bvV47KEPVCGhFgIPc2zEbhf7AsRG7Vgimg79Ym0Dh-akhCVyb8CAgaQXJue7QqIzf7naFTYB7ts4BFDLwNYMOBBHQOfzWlF20Ry63HPVGde-kDbwPeRtkuhVYT8EaQZg-1HyEsgDD_XbYq_YKUFEFQttjKOfzAGgBokwDfFDJzqpxO63NOPsAXwwRJQqc_onP63hxX_bC4PInRW5IOBgPpPQvlBvto_qmJX25inAJtG4EQ-wUHS7ABuxmgXSvrrAfIevQ2Q4ytTZq11c10M-sD0LJ_V3aT-1YCqOvO32A_I9vcuMqWViGB_LjhUclfp87WTFT2ZXOEKF9vDrJooutYqAFo4UnsD85v3Pu0KrtQhdsVvQZdSplRMENz2qDZN7dPtCFVxiKcKFCGIggmFGfwbjZvbo_WkM_kTYPbv0urKtMRduJ6MQozhAXj1FFQZK3B6xlaC4P9pu-Hkw.52b0bDiSYAY42s9vKqvkRA; ACT_SSO_REMEMBER_ME=ODQ1NzgxNjM2NjQ4MDk1MjkxMzokMmEkMTAkL0I1d0FRejRsVU1iNlZTTS5BdzFKT3VkSjJwOE9HaFhQNjdNbExiMnA5dXUwb3lmbXRWQzY; ACT_SSO_EVENT="LOGIN_SUCCESS:1626270282995"; pgacct=battle; CRM_BLOB=eyJ2ZXIiOjEsInBsYXQiOnsicCI6eyJ2IjowLCJ0Ijp7ImJvNCI6eyJtcCI6bnVsbCwieiI6bnVsbCwicHJlcyI6MC4wLCJzcCI6MC4wLCJsZXYiOjAuMH19fX19; tfa_enrollment_seen=true; AMCV_0FB367C2524450B90A490D4C%40AdobeOrg=-637568504%7CMCIDTS%7C18823%7CMCMID%7C73902666679626411140055443744510781612%7CMCAAMLH-1626875086%7C6%7CMCAAMB-1626875086%7C6G1ynYcLPuiQxYZrsz_pkqfLG9yMXBpb2zX5dvJdYQJzPXImdj0y%7CMCOPTOUT-1626277486s%7CNONE%7CMCAID%7CNONE%7CMCSYNCSOP%7C411-18830%7CvVersion%7C5.1.1%7CMCCIDH%7C-1685902251; adobeujs-optin=%7B%22aam%22%3Afalse%2C%22adcloud%22%3Afalse%2C%22aa%22%3Afalse%2C%22campaign%22%3Afalse%2C%22ecid%22%3Afalse%2C%22livefyre%22%3Afalse%2C%22target%22%3Afalse%2C%22mediaaa%22%3Afalse%7D; ssoDevId=4a092bc37e524682a574fd9a1560e8c3; atvi_dob=""; country=GB; umbrellaId=11577823795426053470; at_flavor=""; OptanonConsent=isIABGlobal=false&datestamp=Wed+Jul+14+2021+14%3A44%3A50+GMT%2B0100+(British+Summer+Time)&version=6.13.0&hosts=&consentId=b1b7a752-81c4-41e5-8e71-c7796cea0316&interactionCount=1&landingPath=NotLandingPage&groups=1%3A1%2C2%3A0%2C3%3A0%2C4%3A0&AwaitingReconsent=false';
 class helpers {
   buildUri(str) {
     return `${defaultBaseURL}${str}`;
@@ -36,84 +37,85 @@ class helpers {
   }
   sendRequestUserInfoOnly(url) {
     return new Promise((resolve, reject) => {
-      loggedIn || reject('Not Logged In.'),
-        apiAxios
-          .get(url)
-          .then((body) => {
-            403 == body.status && reject('Forbidden. You may be IP banned.'),
-              1 === debug &&
-                (console.log('[DEBUG]', `Build URI: ${url}`),
-                console.log(
-                  '[DEBUG]',
-                  `Round trip took: ${body.headers['request-duration']}ms.`
-                ),
-                console.log(
-                  '[DEBUG]',
-                  `Response Size: ${JSON.stringify(body.data).length} bytes.`
-                )),
-              resolve(
-                JSON.parse(
-                  body.data.replace(/^userInfo\(/, '').replace(/\);$/, '')
-                )
-              );
-          })
-          .catch((err) => reject(err));
-    });
-  }
-  sendRequest(url) {
-    return new Promise((resolve, reject) => {
-      loggedIn || reject('Not Logged In.'),
-        apiAxios
-          .get(url)
-          .then((response) => {
+      apiAxios
+        .get(url)
+        .then((body) => {
+          403 == body.status && reject('Forbidden. You may be IP banned.'),
             1 === debug &&
               (console.log('[DEBUG]', `Build URI: ${url}`),
               console.log(
                 '[DEBUG]',
-                `Round trip took: ${response.headers['request-duration']}ms.`
+                `Round trip took: ${body.headers['request-duration']}ms.`
               ),
               console.log(
                 '[DEBUG]',
-                `Response Size: ${
-                  JSON.stringify(response.data.data).length
-                } bytes.`
+                `Response Size: ${JSON.stringify(body.data).length} bytes.`
               )),
-              void 0 !== response.data.status &&
-              'success' === response.data.status
-                ? resolve(response.data.data)
-                : reject(this.apiErrorHandling(response));
-          })
-          .catch((error) => {
-            reject(this.apiErrorHandling(error.response));
-          });
+            resolve(
+              JSON.parse(
+                body.data.replace(/^userInfo\(/, '').replace(/\);$/, '')
+              )
+            );
+        })
+        .catch((err) => reject(err));
+    });
+  }
+  sendRequest(url) {
+    console.log('here');
+    return new Promise((resolve, reject) => {
+      console.log('post');
+      apiAxios
+        .get(url)
+        .then((response) => {
+          1 === debug &&
+            (console.log('[DEBUG]', `Build URI: ${url}`),
+            console.log(
+              '[DEBUG]',
+              `Round trip took: ${response.headers['request-duration']}ms.`
+            ),
+            console.log(
+              '[DEBUG]',
+              `Response Size: ${
+                JSON.stringify(response.data.data).length
+              } bytes.`
+            )),
+            void 0 !== response.data.status &&
+            'success' === response.data.status
+              ? resolve(response.data.data)
+              : reject(this.apiErrorHandling({ response: response }));
+        })
+        .catch((error) => {
+          reject(this.apiErrorHandling(error));
+        });
     });
   }
   sendPostRequest(url, data) {
     return new Promise((resolve, reject) => {
-      loggedIn || reject('Not Logged In.'),
-        apiAxios
-          .post(url, JSON.stringify(data))
-          .then((response) => {
-            1 === debug &&
-              (console.log('[DEBUG]', `Build URI: ${url}`),
-              console.log(
-                '[DEBUG]',
-                `Round trip took: ${response.headers['request-duration']}ms.`
-              ),
-              console.log(
-                '[DEBUG]',
-                `Response Size: ${
-                  JSON.stringify(response.data.data).length
-                } bytes.`
-              )),
-              void 0 !== response.data.status &&
-              'success' === response.data.status
-                ? resolve(response.data.data)
-                : reject(this.apiErrorHandling(response));
-          })
-          .catch((error) => {
-            reject(this.apiErrorHandling(error.response));
-          });
+      console.log('post');
+      // loggedIn || reject('Not Logged In.'),
+      apiAxios
+        .post(url, JSON.stringify(data))
+        .then((response) => {
+          1 === debug &&
+            (console.log('[DEBUG]', `Build URI: ${url}`),
+            console.log(
+              '[DEBUG]',
+              `Round trip took: ${response.headers['request-duration']}ms.`
+            ),
+            console.log(
+              '[DEBUG]',
+              `Response Size: ${
+                JSON.stringify(response.data.data).length
+              } bytes.`
+            )),
+            void 0 !== response.data.status &&
+            'success' === response.data.status
+              ? resolve(response.data.data)
+              : reject(this.apiErrorHandling({ response: response }));
+        })
+        .catch((error) => {
+          reject(this.apiErrorHandling(error));
+        });
     });
   }
   postReq(url, data, headers = null) {
@@ -124,42 +126,48 @@ class helpers {
           resolve(response.data);
         })
         .catch((error) => {
-          reject(this.apiErrorHandling(error.response));
+          reject(this.apiErrorHandling(error));
         });
     });
   }
-  apiErrorHandling(response) {
-    switch (response.status) {
-      case 200:
-        const apiErrorMessage =
-          void 0 !== response.data &&
-          void 0 !== response.data.data &&
-          void 0 !== response.data.data.message
-            ? response.data.data.message
-            : void 0 !== response.message
-            ? response.message
-            : 'No error returned from API.';
-        switch (apiErrorMessage) {
-          case 'Not permitted: user not found':
-            return '404 - Not found. Incorrect username or platform? Misconfigured privacy settings?';
-          case 'Not permitted: rate limit exceeded':
-            return '429 - Too many requests. Try again in a few minutes.';
-          case 'Error from datastore':
-            return '500 - Internal server error. Request failed, try again.';
-          default:
-            return apiErrorMessage;
-        }
-        break;
-      case 401:
-        return '401 - Unauthorized. Incorrect username or password.';
-      case 403:
-        return '403 - Forbidden. You may have been IP banned. Try again in a few minutes.';
-      case 500:
-        return '500 - Internal server error. Request failed, try again.';
-      case 502:
-        return '502 - Bad gateway. Request failed, try again.';
-      default:
-        return `We Could not get a valid reason for a failure. Status: ${response.status}`;
+  apiErrorHandling(error) {
+    if (!error) return 'We Could not get a valid reason for a failure.';
+    {
+      let response = error.response;
+      if (!response)
+        return `We Could not get a valid reason for a failure. Status: ${error}`;
+      switch (response.status) {
+        case 200:
+          const apiErrorMessage =
+            void 0 !== response.data &&
+            void 0 !== response.data.data &&
+            void 0 !== response.data.data.message
+              ? response.data.data.message
+              : void 0 !== response.message
+              ? response.message
+              : 'No error returned from API.';
+          switch (apiErrorMessage) {
+            case 'Not permitted: user not found':
+              return '404 - Not found. Incorrect username or platform? Misconfigured privacy settings?';
+            case 'Not permitted: rate limit exceeded':
+              return '429 - Too many requests. Try again in a few minutes.';
+            case 'Error from datastore':
+              return '500 - Internal server error. Request failed, try again.';
+            default:
+              return apiErrorMessage;
+          }
+          break;
+        case 401:
+          return '401 - Unauthorized. Incorrect username or password.';
+        case 403:
+          return '403 - Forbidden. You may have been IP banned. Try again in a few minutes.';
+        case 500:
+          return '500 - Internal server error. Request failed, try again.';
+        case 502:
+          return '502 - Bad gateway. Request failed, try again.';
+        default:
+          return `We Could not get a valid reason for a failure. Status: ${response.status}`;
+      }
     }
   }
 }
@@ -181,7 +189,7 @@ module.exports = function (config = {}) {
     'object' == typeof config.ratelimit &&
       (apiAxios = rateLimit(apiAxios, config.ratelimit));
   } catch (Err) {
-    console.log('Could not parse ratelimit object. ignoring.');
+    console.warn('Could not parse ratelimit object. ignoring.');
   }
   return (
     (_helpers = new helpers()),
@@ -192,43 +200,9 @@ module.exports = function (config = {}) {
       xbl: 'xbl',
       acti: 'acti',
       uno: 'uno',
-      unoid: 'uno',
       all: 'all',
     }),
-    (module.login = function (email, password) {
-      return new Promise((resolve, reject) => {
-        let randomId = uniqid(),
-          deviceId = crypto.createHash('md5').update(randomId).digest('hex');
-        _helpers
-          .postReq(`${loginURL}registerDevice`, { deviceId: deviceId })
-          .then((response) => {
-            let authHeader = response.data.authHeader;
-            (apiAxios.defaults.headers.common.Authorization = `bearer ${authHeader}`),
-              (apiAxios.defaults.headers.common.x_cod_device_id = `${deviceId}`),
-              _helpers
-                .postReq(`${loginURL}login`, {
-                  email: email,
-                  password: password,
-                })
-                .then((data) => {
-                  if (!data.success)
-                    throw Error(
-                      '401 - Unauthorized. Incorrect username or password.'
-                    );
-                  (ssoCookie = data.s_ACT_SSO_COOKIE),
-                    (apiAxios.defaults.headers.common.Cookie = `${baseCookie}rtkn=${data.rtkn};ACT_SSO_COOKIE=${data.s_ACT_SSO_COOKIE};atkn=${data.atkn};`),
-                    (loggedIn = !0),
-                    resolve('200 - OK. Log in successful.');
-                })
-                .catch((err) => {
-                  'string' == typeof err && reject(err), reject(err.message);
-                });
-          })
-          .catch((err) => {
-            'string' == typeof err && reject(err), reject(err.message);
-          });
-      });
-    }),
+    (module.login = loginMeth),
     (module.BO4Stats = function (gamertag, platform = config.platform) {
       return new Promise((resolve, reject) => {
         'steam' === platform &&
@@ -477,7 +451,9 @@ module.exports = function (config = {}) {
       });
     }),
     (module.MWcombatwz = function (gamertag, platform = config.platform) {
+      console.log('CALLING');
       return new Promise((resolve, reject) => {
+        console.log('In Promise');
         'steam' === platform &&
           reject("Steam Doesn't exist for MW. Try `battle` instead."),
           (gamertag = _helpers.cleanClientName(gamertag));
@@ -488,6 +464,7 @@ module.exports = function (config = {}) {
         let urlInput = _helpers.buildUri(
           `crm/cod/v2/title/mw/platform/${platform}/${lookupType}/${gamertag}/matches/wz/start/0/end/0/details`
         );
+        console.log(urlInput);
         _helpers
           .sendRequest(urlInput)
           .then((data) => resolve(data))
@@ -700,27 +677,6 @@ module.exports = function (config = {}) {
             (platform = this.platforms.uno);
         let urlInput = _helpers.buildUri(
           `stats/cod/v1/title/mw/platform/${platform}/${lookupType}/${gamertag}/profile/friends/type/wz`
-        );
-        _helpers
-          .sendRequest(urlInput)
-          .then((data) => resolve(data))
-          .catch((e) => reject(e));
-      });
-    }),
-    (module.MWZProfile = function (gamertag, platform = config.platform) {
-      return new Promise((resolve, reject) => {
-        'steam' === platform &&
-          reject("Steam Doesn't exist for MW. Try `battle` instead."),
-          'battle' === platform &&
-            reject(
-              'Battlenet friends are not supported. Try a different platform.'
-            ),
-          'uno' === platform && (gamertag = _helpers.cleanClientName(gamertag));
-        'uno' === platform && (lookupType = 'id'),
-          ('uno' !== platform && 'acti' !== platform) ||
-            (platform = this.platforms.uno);
-        let urlInput = _helpers.buildUri(
-          `stats/cod/v1/title/mw/platform/xbl/gamer/topgunrowan/profile/type/mp`
         );
         _helpers
           .sendRequest(urlInput)
@@ -972,6 +928,28 @@ module.exports = function (config = {}) {
           .catch((e) => reject(e));
       });
     }),
+    (module.GetPurchasablePublic = function () {
+      return new Promise((resolve, reject) => {
+        let urlInput = _helpers.buildUri(
+          'inventory/v1/title/cw/platform/psn/purchasable/public/en'
+        );
+        _helpers
+          .sendRequest(urlInput)
+          .then((data) => resolve(data))
+          .catch((e) => reject(e));
+      });
+    }),
+    (module.getBundleInformation = function (title, bundleId) {
+      return new Promise((resolve, reject) => {
+        let urlInput = _helpers.buildUri(
+          `inventory/v1/title/${title}/bundle/${bundleId}/en`
+        );
+        _helpers
+          .sendRequest(urlInput)
+          .then((data) => resolve(data))
+          .catch((e) => reject(e));
+      });
+    }),
     (module.friendFeed = function (gamertag, platform = config.platform) {
       return new Promise((resolve, reject) => {
         (gamertag = _helpers.cleanClientName(gamertag)),
@@ -1189,7 +1167,7 @@ module.exports = function (config = {}) {
       });
     }),
     (module.isLoggedIn = function () {
-      return loggedIn;
+      return true;
     }),
     (module.apiAxios = apiAxios),
     module

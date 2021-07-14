@@ -45,3 +45,14 @@ export const mapErrors = (errors: Object[]) => {
 
 export const intSafeCheck = (value: number) =>
   value > 2000000000 ? 4000 : value;
+
+export const checkTruthyInARow = (array: any, length: number) => {
+  let count = 0;
+
+  return array.some((a: any) => {
+    if (a !== true) {
+      count = 0;
+    }
+    return ++count === length;
+  });
+};
