@@ -8,11 +8,15 @@ import { MatchData } from '../entities/MatchData';
 import { Player } from '../entities/Player';
 import { PlayerAchievement } from '../entities/PlayerAchievement';
 import { getPlayersAchievements } from '../utils/getPlayersAchievements';
-// import { getPlayersAchievements } from '../utils/getPlayersAchievements';
+import { clean } from '../utils/helpers';
 
-const getAchievements = async (_: Request, res: Response) => {
+const getAchievements = async (req: Request, res: Response) => {
+  const where = clean({ ...req.params });
+
   try {
-    const achievementData = await Achievement.find();
+    const achievementData = await Achievement.find({
+      where,
+    });
     return res.json(achievementData);
   } catch (e) {
     logger.error(e.message);
@@ -67,8 +71,26 @@ const getAchievementsForPlayer = async (req: Request, res: Response) => {
     return res.status(404).json({ error: `Player with uno ${uno} not found` });
   }
 
+  let achievements: Achievement[] | null = null;
   try {
-    const achievementData = await PlayerAchievement.find({
+    const orderColumn = 'achievement.modifierType';
+    achievements = await getRepository(Achievement)
+      .createQueryBuilder('achievement')
+      .orderBy('achievement.type', 'ASC')
+      .addOrderBy(
+        `(case when ${orderColumn} = 'ACHIEVE' then 1 when ${orderColumn} = 'LAST' then 2 when ${orderColumn} = 'ROW' then 3 else 4 end)`
+      )
+      .addOrderBy('achievement.modifier', 'ASC')
+      .addOrderBy('achievement.value', 'ASC')
+      .getMany();
+  } catch (e) {
+    logger.error('Problem getting achievements');
+    return res.status(500).json({ error: `Can't get achievements` });
+  }
+
+  let achievementData: PlayerAchievement[] | null = null;
+  try {
+    achievementData = await PlayerAchievement.find({
       where: {
         player: {
           id: player.id,
@@ -77,13 +99,24 @@ const getAchievementsForPlayer = async (req: Request, res: Response) => {
       order: {
         createdAt: 'DESC',
       },
-      relations: ['achievement', 'player'],
+      relations: ['achievement'],
     });
-    return res.json(achievementData);
+    // return res.json(achievementData);
   } catch (e) {
     logger.error(e.message);
     return res.status(500).json({ error: 'Something went wrong' });
   }
+
+  const parsedAchievements = achievements.map((achievement) => {
+    const achieved =
+      !achievementData ||
+      achievementData.some(
+        (playerAch) => playerAch.achievement.id === achievement.id
+      );
+    return { ...achievement, achieved };
+  });
+
+  return res.json(parsedAchievements);
 };
 
 const createPlayerAchievement = async (req: Request, res: Response) => {
@@ -139,8 +172,6 @@ const trackPlayerAchievement = async (_: Request, res: Response) => {
     logger.error(JSON.stringify(e));
   }
 
-  console.log(achievementTrack);
-
   if (!achievementTrack) {
     try {
       const newAchievementTrack = new AchievementTrack({});
@@ -181,10 +212,6 @@ const trackPlayerAchievement = async (_: Request, res: Response) => {
       await Promise.all(
         players.map(async (player) => {
           try {
-            const startSeconds = Math.floor(
-              new Date(achievementTrack!.updatedAt).getTime() / 1000
-            );
-
             const matchDataWithSolosQuery = getRepository(MatchData)
               .createQueryBuilder('match')
               .leftJoinAndSelect('match.teams', 'teams')
@@ -201,10 +228,7 @@ const trackPlayerAchievement = async (_: Request, res: Response) => {
                 return 'match.id IN ' + subQuery;
               })
               .setParameter('uno', player.uno)
-              .andWhere('match.mode IN(:...modes)', { modes: TROPHY_MODES })
-              .andWhere('match.utcStartSeconds >= :startSeconds', {
-                startSeconds,
-              });
+              .andWhere('match.mode IN(:...modes)', { modes: TROPHY_MODES });
 
             const matchDataWithSolos = await matchDataWithSolosQuery
               .orderBy({
@@ -214,6 +238,7 @@ const trackPlayerAchievement = async (_: Request, res: Response) => {
               .getMany();
 
             if (matchDataWithSolos.length < 1) {
+              console.log('no games');
               return;
             }
 
@@ -235,9 +260,6 @@ const trackPlayerAchievement = async (_: Request, res: Response) => {
               .setParameter('uno', player.uno)
               .andWhere('match.mode IN(:...modes)', {
                 modes: NON_SOLO_TROPHY_MODES,
-              })
-              .andWhere('match.utcStartSeconds >= :startSeconds', {
-                startSeconds,
               });
 
             const matchDataWithoutSolos = await matchDataWithoutSolosQuery
@@ -254,11 +276,8 @@ const trackPlayerAchievement = async (_: Request, res: Response) => {
 
             // TODO: Just need to double check this does what it says on the tin - updatedAt time means no games so not getting this far
             achievements
-              .filter((ach) => playerAlreadyAchieved.includes(ach.id))
+              .filter((ach) => !playerAlreadyAchieved.includes(ach.id))
               .map((achievement) => {
-                if (player.uno === '8457816366480952913') {
-                  console.log(achievement.id);
-                }
                 const achieved = getPlayersAchievements(
                   achievement,
                   {
@@ -267,6 +286,7 @@ const trackPlayerAchievement = async (_: Request, res: Response) => {
                   },
                   player
                 );
+                console.log({ achieved, achievement });
                 if (achieved) {
                   playerHasAchieved.push(achievement);
                 }
@@ -314,11 +334,11 @@ const trackPlayerAchievement = async (_: Request, res: Response) => {
 
 const router = Router();
 
-router.get('/', getAchievements);
+router.get('/uno/:uno', getAchievementsForPlayer);
 router.post('/', createAchievement);
 router.delete('/:id', deleteAchievement);
 router.get('/track-achievements', trackPlayerAchievement);
-router.get('/uno/:uno', getAchievementsForPlayer);
 router.post('/uno/:uno', createPlayerAchievement);
+router.get('/:type?/:modifierType?', getAchievements);
 
 export default router;

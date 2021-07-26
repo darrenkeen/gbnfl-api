@@ -59,33 +59,11 @@ const getMatchData = async (req: Request, res: Response) => {
   }
 };
 
-const testing = async (_: Request, res: Response) => {
+const testing = async (req: Request, res: Response) => {
+  const { query } = req.params;
   try {
-    const qb = await getRepository(MatchData).createQueryBuilder('match');
-    const matchDataQuery = qb
-      .select('match.id')
-      .leftJoinAndSelect('match.teams', 'teams')
-      .leftJoinAndSelect('teams.players', 'players')
-      .where(
-        'match.id IN' +
-          qb
-            .subQuery()
-            .select('match.id')
-            .from(MatchData, 'match')
-            .leftJoin('match.teams', 'teams')
-            .leftJoin('teams.players', 'players')
-            .where('players.uno = :uno', { uno: '8457816366480952913' })
-            .getQuery()
-      );
-
-    const matchData = await matchDataQuery
-      .orderBy({
-        'match.utcStartSeconds': 'DESC',
-      })
-      .limit(20)
-      .getMany();
-
-    return res.json({ matchData });
+    const data = await API.FuzzySearch(query, 'all');
+    return res.json({ data });
   } catch (e) {
     console.error(e);
     return res.status(400).json({ error: e });
@@ -103,7 +81,6 @@ router.get(
 );
 router.get(
   '/lifetime/:playerId/:platform',
-  auth,
   cache('5 minutes', onlyStatus200),
   cacheTimestamp,
   getLifetimeData
@@ -115,6 +92,6 @@ router.get(
   getMatchData
 );
 router.get('/seasons', getAvailableSeasons);
-router.get('/testing/:end', auth, testing);
+router.get('/testing/:query', testing);
 
 export default router;
