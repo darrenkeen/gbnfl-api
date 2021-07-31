@@ -2,13 +2,26 @@ import { Request, Response, Router } from 'express';
 import { getRepository, IsNull, Not } from 'typeorm';
 import { logger } from '../config/logger';
 import { NON_SOLO_TROPHY_MODES, TROPHY_MODES } from '../constants';
-import { Achievement } from '../entities/Achievement';
+import { Achievement, AchievementType } from '../entities/Achievement';
 import { AchievementTrack } from '../entities/AchievementTrack';
 import { MatchData } from '../entities/MatchData';
 import { Player } from '../entities/Player';
 import { PlayerAchievement } from '../entities/PlayerAchievement';
 import { getPlayersAchievements } from '../utils/getPlayersAchievements';
 import { clean } from '../utils/helpers';
+
+interface AchievementWithAchieved extends Partial<Achievement> {
+  achieved: boolean;
+}
+
+interface PlayerAchievementWithMeta {
+  _meta: {
+    total: number;
+    achieved: number;
+    percentage: number;
+  };
+  achievements: Record<AchievementType, AchievementWithAchieved[]>;
+}
 
 const getAchievements = async (req: Request, res: Response) => {
   const where = clean({ ...req.params });
@@ -101,22 +114,76 @@ const getAchievementsForPlayer = async (req: Request, res: Response) => {
       },
       relations: ['achievement'],
     });
-    // return res.json(achievementData);
   } catch (e) {
     logger.error(e.message);
     return res.status(500).json({ error: 'Something went wrong' });
   }
 
-  const parsedAchievements = achievements.map((achievement) => {
-    const achieved =
-      !achievementData ||
-      achievementData.some(
-        (playerAch) => playerAch.achievement.id === achievement.id
-      );
-    return { ...achievement, achieved };
-  });
+  if (!achievements) {
+    return res.status(404).json({ error: 'No achievements' });
+  }
 
-  return res.json(parsedAchievements);
+  const playerAchievmentWithMeta: PlayerAchievementWithMeta = {
+    _meta: {
+      total: achievements.length,
+      achieved: 0,
+      percentage: 0,
+    },
+    achievements: {
+      [AchievementType.Kills]: [],
+      [AchievementType.Killer]: [],
+      [AchievementType.Gulag]: [],
+      [AchievementType.TopTen]: [],
+      [AchievementType.Win]: [],
+      [AchievementType.Kd]: [],
+    },
+  };
+
+  if (achievements) {
+    for (let achInd = 0; achInd < achievements.length; achInd++) {
+      const achieved =
+        !achievementData ||
+        achievementData.some(
+          (playerAch) => playerAch.achievement.id === achievements![achInd].id
+        );
+      const ach: AchievementWithAchieved = {
+        ...achievements[achInd],
+        achieved,
+      };
+
+      playerAchievmentWithMeta.achievements[achievements[achInd].type].push(
+        ach
+      );
+
+      if (achieved) {
+        playerAchievmentWithMeta._meta.achieved++;
+        playerAchievmentWithMeta._meta.percentage =
+          Math.floor(
+            (playerAchievmentWithMeta._meta.achieved /
+              playerAchievmentWithMeta._meta.total) *
+              10000
+          ) / 100;
+      }
+    }
+  }
+
+  // const parsedAchievements = achievements.reduce((acc, ach: Achievement) => {
+  //   const achieved =
+  //     !achievementData ||
+  //     achievementData.some((playerAch) => playerAch.achievement.id === ach.id);
+  //   const achievementWithAchieved = {
+  //     ...ach,
+  //     achieved,
+  //   } as AchievementWithAchieved;
+  //   if (acc[ach.type]) {
+  //     acc[ach.type].push(achievementWithAchieved);
+  //   } else {
+  //     acc[ach.type] = [achievementWithAchieved];
+  //   }
+  //   return acc;
+  // }, {} as Record<AchievementType, AchievementWithAchieved[]>);
+
+  return res.json(playerAchievmentWithMeta);
 };
 
 const createPlayerAchievement = async (req: Request, res: Response) => {
@@ -286,7 +353,6 @@ const trackPlayerAchievement = async (_: Request, res: Response) => {
                   },
                   player
                 );
-                console.log({ achieved, achievement });
                 if (achieved) {
                   playerHasAchieved.push(achievement);
                 }

@@ -19,8 +19,9 @@ import { MatchTrack } from '../entities/MatchTrack';
 import { buildLastUpdatedResponse } from '../utils/buildResponse';
 import lastUpdated from '../middleware/lastUpdated';
 import { intSafeCheck } from '../utils/helpers';
+import auth from '../middleware/auth';
 
-const API = require('../api.js')();
+const API = require('call-of-duty-api')();
 
 const getMatches = async (_: Request, res: Response) => {
   try {
@@ -607,7 +608,7 @@ const trackMatch = async (_: Request, res: Response) => {
 
 const router = Router();
 
-router.get('/track-match', trackMatch);
+router.get('/track-match', auth, trackMatch);
 router.get('/:season', lastUpdated, getMatchesBySeason);
 router.get(
   '/uno/:uno/start/:startSeconds',

@@ -52,6 +52,7 @@ export const checkTruthyInARow = (array: any, length: number) => {
   return array.some((a: any) => {
     if (a !== true) {
       count = 0;
+      return false;
     }
     return ++count === length;
   });

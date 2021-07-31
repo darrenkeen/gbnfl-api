@@ -10,7 +10,7 @@ import { buildMatchData } from '../utils/buildMatchData';
 import { SEASON_START_END } from '../constants';
 import { getRepository } from 'typeorm';
 import { MatchData } from '../entities/MatchData';
-const API = require('../api.js')();
+const API = require('call-of-duty-api')();
 
 const getAvailableSeasons = (_: Request, res: Response) => {
   return res.json({ data: SEASON_START_END });
@@ -74,24 +74,26 @@ const router = Router();
 
 router.get(
   '/latest/:playerId/:platform',
-  // auth,
+  auth,
   // cache('5 minutes', onlyStatus200),
   // cacheTimestamp,
   getLatestData
 );
 router.get(
   '/lifetime/:playerId/:platform',
+  auth,
   cache('5 minutes', onlyStatus200),
   cacheTimestamp,
   getLifetimeData
 );
 router.get(
   '/match/:matchId',
+  auth,
   cache('60 minutes', onlyStatus200),
   cacheTimestamp,
   getMatchData
 );
 router.get('/seasons', getAvailableSeasons);
-router.get('/testing/:query', testing);
+router.get('/testing/:query', auth, testing);
 
 export default router;

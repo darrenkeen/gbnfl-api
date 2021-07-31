@@ -135,7 +135,6 @@ const updatePlayer = async (req: Request, res: Response) => {
       updateData.user = user;
     }
     const del = await Player.update(id, updateData);
-    console.log(del, updateData);
     if (
       typeof del.affected !== 'undefined' &&
       del.affected !== null &&
