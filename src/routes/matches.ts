@@ -4,7 +4,6 @@ import { nanoid } from 'nanoid';
 
 import { MatchData } from '../entities/MatchData';
 import { Player } from '../entities/Player';
-import auth from '../middleware/auth';
 import { buildMatchData } from '../utils/buildMatchData';
 import { getMissionStats } from '../utils/getMissionStats';
 import {
@@ -12,7 +11,6 @@ import {
   TROPHY_MODES,
   WITH_RANK_SOLO_MODE,
 } from '../constants';
-import cache from '../middleware/cache';
 import { logger } from '../config/logger';
 import { LifetimePlayer } from '../entities/LifetimePlayer';
 import { mapWeeklyData } from '../utils/mapWeeklyData';
@@ -21,6 +19,7 @@ import { MatchTrack } from '../entities/MatchTrack';
 import { buildLastUpdatedResponse } from '../utils/buildResponse';
 import lastUpdated from '../middleware/lastUpdated';
 import { intSafeCheck } from '../utils/helpers';
+import auth from '../middleware/auth';
 
 const API = require('call-of-duty-api')();
 
@@ -588,12 +587,12 @@ const trackMatch = async (_: Request, res: Response) => {
         });
       })
     );
-    const matchTrachCache = await MatchTrack.findOne();
-    if (!matchTrachCache) {
+    const matchTrackCache = await MatchTrack.findOne();
+    if (!matchTrackCache) {
       const newMatchTrack = new MatchTrack({});
       await newMatchTrack.save();
     } else {
-      await MatchTrack.update(matchTrachCache.id, {});
+      await MatchTrack.update(matchTrackCache.id, {});
     }
     logger.info(
       `Track Match: Updated ${Object.keys(winData).length} wins and ${
@@ -609,7 +608,7 @@ const trackMatch = async (_: Request, res: Response) => {
 
 const router = Router();
 
-router.get('/track-match', cache('5 minutes'), auth, trackMatch);
+router.get('/track-match', auth, trackMatch);
 router.get('/:season', lastUpdated, getMatchesBySeason);
 router.get(
   '/uno/:uno/start/:startSeconds',

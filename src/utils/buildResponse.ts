@@ -1,7 +1,7 @@
 import { Response } from 'express';
 
 export const buildResponse = (res: Response, data: any) => ({
-  cacheTimestamp: res.locals.cacheTimestamp,
+  cacheTimestamp: '1',
   data,
 });
 

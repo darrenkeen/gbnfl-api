@@ -8,8 +8,8 @@ import cacheTimestamp from '../middleware/cacheTimestamp';
 import { buildResponse } from '../utils/buildResponse';
 import { buildMatchData } from '../utils/buildMatchData';
 import { SEASON_START_END } from '../constants';
-import { Player } from '../entities/Player';
-import { SelectQueryBuilder } from 'typeorm';
+import { getRepository } from 'typeorm';
+import { MatchData } from '../entities/MatchData';
 const API = require('call-of-duty-api')();
 
 const getAvailableSeasons = (_: Request, res: Response) => {
@@ -59,16 +59,10 @@ const getMatchData = async (req: Request, res: Response) => {
   }
 };
 
-const testing = async (_: Request, res: Response) => {
+const testing = async (req: Request, res: Response) => {
+  const { query } = req.params;
   try {
-    const data = await Player.findOneOrFail({
-      join: { alias: 'player', innerJoin: { user: 'player.user' } },
-      where: (queryBuilder: SelectQueryBuilder<any>) => {
-        queryBuilder.where('user.id = :id', { id: 'B39kYSMbyp' });
-      },
-      relations: ['user'],
-    });
-
+    const data = await API.FuzzySearch(query, 'all');
     return res.json({ data });
   } catch (e) {
     console.error(e);
@@ -81,8 +75,8 @@ const router = Router();
 router.get(
   '/latest/:playerId/:platform',
   auth,
-  cache('5 minutes', onlyStatus200),
-  cacheTimestamp,
+  // cache('5 minutes', onlyStatus200),
+  // cacheTimestamp,
   getLatestData
 );
 router.get(
@@ -94,11 +88,12 @@ router.get(
 );
 router.get(
   '/match/:matchId',
+  auth,
   cache('60 minutes', onlyStatus200),
   cacheTimestamp,
   getMatchData
 );
 router.get('/seasons', getAvailableSeasons);
-router.get('/testing/:end', auth, testing);
+router.get('/testing/:query', auth, testing);
 
 export default router;

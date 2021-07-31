@@ -1,12 +1,10 @@
 const axios = require('axios'),
-  uniqid = require('uniqid'),
   rateLimit = require('axios-rate-limit'),
-  crypto = require('crypto'),
   userAgent = 'a4b471be-4ad2-47e2-ba0e-e1f2aa04bff9';
 let ssoCookie,
   baseCookie =
-    'new_SiteId=cod; ACT_SSO_LOCALE=en_US;country=US;XSRF-TOKEN=68e8b62e-1d9d-4ce1-b93f-cbe5ff31a041;API_CSRF_TOKEN=68e8b62e-1d9d-4ce1-b93f-cbe5ff31a041;',
-  loggedIn = !1,
+    'XSRF-TOKEN=xT5Z2wSsbrQWGyUNNFFBzwI2d85WAf6R9W60euXxaAUNPL6imSc_9nBqDvDeYPj4; comid=cod; bm_sz=4E2CAFF4D0BDE0D82A56FE35469E975E~YAAQV1fdWOwnlxl6AQAACjf7pgxK0MmVU2Nj4wwb499LzwiNDymhOHVPeCsPuHAgHNKGXaf3cOAcLsJxSjNnyFNSGSfuAPUllDOXV/Y72CXE5M4PMHFfUS5CeujSuiCQyMSblsSf6snrb6PRmqyN7vu7ypaDDrVU4DCSkEfmBgjLcmPW5KRGRQXanTRPmI7IbwMK7AuCLzSRi3w81FYlqYvIGcjn91QPNfDjMmA+HaA4iZb5Ov9uv24JrcAa57/BQmx/Vs3vBOaMdAbB9G8ezsk1QLKVGv0J+RyAeI8b9aeuheCqwJYI~3224627~3748149; new_SiteId=cod; ACT_SSO_LOCALE=en_US; ACT_SSO_COOKIE=ODQ1NzgxNjM2NjQ4MDk1MjkxMzoxNjI3NTA4NzM0MzM4OjVjYzI0MzI5MmMyNDljMDY4NWIwY2EyZWY2OGM1MjNj; ACT_SSO_COOKIE_EXPIRY=1627508734338; atkn=eyJhbGciOiAiQTEyOEtXIiwgImVuYyI6ICJBMTI4R0NNIiwgImtpZCI6ICJ1bm9fcHJvZF9sYXNfMSJ9.AogpVebBtQAzKvFBoGF8072GG0ufN5lXDmZOfOr1JH_7zQZSYhhViw.FvipqdCaxrC8DFyv.p9e66s4a8HSxLBHF3_PwteqPL3TGwTDekxIXpTYr0iR_45Kh86aJbE835WYTX_exEfmI00spo6m62VLqfT7NiPLctvqboU4FmzrpH4cfqIF2vlLGp8rFs4wvGsh29v2GPig3oBMOP_ElnPIy_n7iA5bJU9O4wH6baRFc-DPK-Sdd7XfiVPhm6y0txfnB9vf3VEFPtqii5Qn8gZ8YuxIxstQ2b_HHiqm_zn4MpuIR5xHGFi78VDykvmYg7irv93ZbkoqGlfZrQIBne93T_j5eL269CJmPOnDIAwsnbLW-80zoWf39PYzyTjhiZw8S6eNj5IYx-maAcFGNlFyfsLxzosofh1MOgIJ2MaEzLc41cMEpDnhLsMYSsv1v5zTmFoSjfLKjvGX5gdNKVZS934QuxHPA25-1Tg8-l8T_jIXOB1QHMPHS1OcT3fiQypQ3cfD41hUXJCANyNopsBbHu3nv-hIfmrU.MbOpHGz0-ApGZ9c-pUi15g; ACT_SSO_REMEMBER_ME=ODQ1NzgxNjM2NjQ4MDk1MjkxMzokMmEkMTAkbVMxQjFFZFpScGttS09WSkx1QmVzdUVOSGxGcHlhTEhrcFN6THR6WFZFZmJkTlh6WXRKU3k; ACT_SSO_EVENT="LOGIN_SUCCESS:1626299134415"',
+  loggedIn = true,
   debug = 0,
   apiAxios = axios.create({
     headers: {
@@ -194,40 +192,6 @@ module.exports = function (config = {}) {
       uno: 'uno',
       unoid: 'uno',
       all: 'all',
-    }),
-    (module.login = function (email, password) {
-      return new Promise((resolve, reject) => {
-        let randomId = uniqid(),
-          deviceId = crypto.createHash('md5').update(randomId).digest('hex');
-        _helpers
-          .postReq(`${loginURL}registerDevice`, { deviceId: deviceId })
-          .then((response) => {
-            let authHeader = response.data.authHeader;
-            (apiAxios.defaults.headers.common.Authorization = `bearer ${authHeader}`),
-              (apiAxios.defaults.headers.common.x_cod_device_id = `${deviceId}`),
-              _helpers
-                .postReq(`${loginURL}login`, {
-                  email: email,
-                  password: password,
-                })
-                .then((data) => {
-                  if (!data.success)
-                    throw Error(
-                      '401 - Unauthorized. Incorrect username or password.'
-                    );
-                  (ssoCookie = data.s_ACT_SSO_COOKIE),
-                    (apiAxios.defaults.headers.common.Cookie = `${baseCookie}rtkn=${data.rtkn};ACT_SSO_COOKIE=${data.s_ACT_SSO_COOKIE};atkn=${data.atkn};`),
-                    (loggedIn = !0),
-                    resolve('200 - OK. Log in successful.');
-                })
-                .catch((err) => {
-                  'string' == typeof err && reject(err), reject(err.message);
-                });
-          })
-          .catch((err) => {
-            'string' == typeof err && reject(err), reject(err.message);
-          });
-      });
     }),
     (module.BO4Stats = function (gamertag, platform = config.platform) {
       return new Promise((resolve, reject) => {
@@ -700,27 +664,6 @@ module.exports = function (config = {}) {
             (platform = this.platforms.uno);
         let urlInput = _helpers.buildUri(
           `stats/cod/v1/title/mw/platform/${platform}/${lookupType}/${gamertag}/profile/friends/type/wz`
-        );
-        _helpers
-          .sendRequest(urlInput)
-          .then((data) => resolve(data))
-          .catch((e) => reject(e));
-      });
-    }),
-    (module.MWZProfile = function (gamertag, platform = config.platform) {
-      return new Promise((resolve, reject) => {
-        'steam' === platform &&
-          reject("Steam Doesn't exist for MW. Try `battle` instead."),
-          'battle' === platform &&
-            reject(
-              'Battlenet friends are not supported. Try a different platform.'
-            ),
-          'uno' === platform && (gamertag = _helpers.cleanClientName(gamertag));
-        'uno' === platform && (lookupType = 'id'),
-          ('uno' !== platform && 'acti' !== platform) ||
-            (platform = this.platforms.uno);
-        let urlInput = _helpers.buildUri(
-          `stats/cod/v1/title/mw/platform/xbl/gamer/topgunrowan/profile/type/mp`
         );
         _helpers
           .sendRequest(urlInput)

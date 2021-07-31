@@ -51,9 +51,7 @@ export const WITH_RANK_MODE = [
   'br_mini_miniroyale',
 ];
 
-export const TROPHY_MODES = [
-  'br_brsolo',
-  'br_brz_brsolo',
+export const NON_SOLO_TROPHY_MODES = [
   'br_brduos',
   'br_brz_brduos',
   'br_brtrios',
@@ -61,3 +59,7 @@ export const TROPHY_MODES = [
   'br_brquads',
   'br_brz_brquads',
 ];
+
+export const SOLO_TROPHY_MODES = ['br_brsolo', 'br_brz_brsolo'];
+
+export const TROPHY_MODES = [...SOLO_TROPHY_MODES, ...NON_SOLO_TROPHY_MODES];

@@ -58,6 +58,7 @@ const login = async (req: Request, res: Response) => {
     where: {
       email,
     },
+    relations: ['player'],
   });
   if (!user) {
     return res.status(401).json({
