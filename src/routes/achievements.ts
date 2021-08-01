@@ -291,6 +291,9 @@ const trackPlayerAchievement = async (_: Request, res: Response) => {
                   .leftJoin('match.teams', 'teams')
                   .leftJoin('teams.players', 'players')
                   .where('players.uno = :uno')
+                  .andWhere('match.utcStartSeconds > :startSeconds', {
+                    startSeconds: 1627844788,
+                  })
                   .getQuery();
                 return 'match.id IN ' + subQuery;
               })
@@ -305,7 +308,7 @@ const trackPlayerAchievement = async (_: Request, res: Response) => {
               .getMany();
 
             if (matchDataWithSolos.length < 1) {
-              console.log('no games');
+              console.log('no games', player.name);
               return;
             }
 
@@ -321,6 +324,9 @@ const trackPlayerAchievement = async (_: Request, res: Response) => {
                   .leftJoin('match.teams', 'teams')
                   .leftJoin('teams.players', 'players')
                   .where('players.uno = :uno')
+                  .andWhere('match.utcStartSeconds > :startSeconds', {
+                    startSeconds: 1627844788,
+                  })
                   .getQuery();
                 return 'match.id IN ' + subQuery;
               })
@@ -335,6 +341,9 @@ const trackPlayerAchievement = async (_: Request, res: Response) => {
               })
               .take(20)
               .getMany();
+
+            console.log(`${player.name} got here`);
+            console.log(matchDataWithSolos[0].id);
 
             const playerHasAchieved: Achievement[] = [];
             const playerAlreadyAchieved = player.achievements.map(
