@@ -13,7 +13,11 @@ export const SEASON_START_END: Record<string, { start: number; end: number }> =
     },
     '4': {
       start: 1623902401000,
-      end: 1630454400000, // Dummy date for 'Sep 01 2021 01:00:00' as no end time yet...
+      end: 1628830800000,
+    },
+    '5': {
+      start: 1628830801000,
+      end: 1634101200000, // Dummy date for 'Oct 13 2021 06:00:00' as no end time yet...
     },
   };
 
