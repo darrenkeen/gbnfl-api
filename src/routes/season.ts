@@ -2,14 +2,14 @@ import { Request, Response, Router } from 'express';
 import { SelectQueryBuilder } from 'typeorm';
 
 import { logger } from '../config/logger';
-import { MODE_KEYS, SEASON_START_END, TROPHY_MODES } from '../constants';
+import { SEASON_START_END, TROPHY_MODES } from '../constants';
 import { MatchDataPlayer } from '../entities/MatchDataPlayer';
 import lastUpdated from '../middleware/lastUpdated';
 import { buildLastUpdatedResponse } from '../utils/buildResponse';
 import { mapSeasonData } from '../utils/mapSeasonData';
 
 export type SeasonDataResponse = {
-  mode: keyof typeof MODE_KEYS;
+  mode: string;
   gamesPlayed: number;
   wins: number;
   kills: number;

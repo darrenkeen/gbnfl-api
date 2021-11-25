@@ -399,7 +399,7 @@ const trackMatch = async (_: Request, res: Response) => {
                     `,
                     [
                       nanoid(10),
-                      teamPlayer.player.username,
+                      teamPlayer.player.username || 'noUsername',
                       teamPlayer.player.clantag,
                       matchDataTeam[0].id,
                       teamPlayer.player.uno,
@@ -539,7 +539,7 @@ const trackMatch = async (_: Request, res: Response) => {
                     `,
                     [
                       nanoid(10),
-                      teamPlayer.player.username,
+                      teamPlayer.player.username || 'noUsername',
                       teamPlayer.player.clantag,
                       matchDataTeam[0].id,
                       teamPlayer.player.uno,

@@ -7,13 +7,33 @@ import cache, { onlyStatus200 } from '../middleware/cache';
 import cacheTimestamp from '../middleware/cacheTimestamp';
 import { buildResponse } from '../utils/buildResponse';
 import { buildMatchData } from '../utils/buildMatchData';
-import { SEASON_START_END } from '../constants';
-import { getRepository } from 'typeorm';
-import { MatchData } from '../entities/MatchData';
+import {
+  MODE_KEYS,
+  SEASON_START_END,
+  TROPHY_MODES,
+  WITH_RANK_MODE,
+} from '../constants';
+
 const API = require('call-of-duty-api')();
 
 const getAvailableSeasons = (_: Request, res: Response) => {
   return res.json({ data: SEASON_START_END });
+};
+
+const getGameModes = (_: Request, res: Response) => {
+  const modes = Object.keys(MODE_KEYS).reduce((acc, curr: string) => {
+    const isTrophy = TROPHY_MODES.includes(curr);
+    const isRanked = WITH_RANK_MODE.includes(curr);
+    return {
+      ...acc,
+      [curr]: {
+        name: MODE_KEYS[curr],
+        isRanked,
+        isTrophy,
+      },
+    };
+  }, {});
+  return res.json({ data: modes });
 };
 
 const getLatestData = async (req: Request, res: Response) => {
@@ -94,6 +114,7 @@ router.get(
   getMatchData
 );
 router.get('/seasons', getAvailableSeasons);
+router.get('/game-modes', getGameModes);
 router.get('/testing/:query', auth, testing);
 
 export default router;
