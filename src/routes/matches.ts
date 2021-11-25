@@ -402,7 +402,7 @@ const trackMatch = async (_: Request, res: Response) => {
                       teamPlayer.player.username || 'noUsername',
                       teamPlayer.player.clantag,
                       matchDataTeam[0].id,
-                      teamPlayer.player.uno,
+                      teamPlayer.player.uno || '0',
                       teamPlayer.player.brMissionStats?.missionsComplete || 0,
                       getMissionStats(
                         teamPlayer.player.brMissionStats?.missionStatsByType ||
@@ -542,7 +542,7 @@ const trackMatch = async (_: Request, res: Response) => {
                       teamPlayer.player.username || 'noUsername',
                       teamPlayer.player.clantag,
                       matchDataTeam[0].id,
-                      teamPlayer.player.uno,
+                      teamPlayer.player.uno || '0',
                       teamPlayer.player.brMissionStats?.missionsComplete || 0,
                       getMissionStats(
                         teamPlayer.player.brMissionStats?.missionStatsByType ||
