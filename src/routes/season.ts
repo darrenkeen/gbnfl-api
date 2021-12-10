@@ -2,7 +2,7 @@ import { Request, Response, Router } from 'express';
 import { SelectQueryBuilder } from 'typeorm';
 
 import { logger } from '../config/logger';
-import { SEASON_START_END, TROPHY_MODES } from '../constants';
+import { CURRENT_SEASON, SEASON_START_END, TROPHY_MODES } from '../constants';
 import { MatchDataPlayer } from '../entities/MatchDataPlayer';
 import lastUpdated from '../middleware/lastUpdated';
 import { buildLastUpdatedResponse } from '../utils/buildResponse';
@@ -21,13 +21,13 @@ export type SeasonDataResponse = {
 }[];
 
 const getSeasonPlayer = async (req: Request, res: Response) => {
-  const { uno, season } = req.params;
+  const { uno } = req.params;
 
-  if (!SEASON_START_END[season]) {
+  if (!SEASON_START_END[CURRENT_SEASON.toString()]) {
     return res.status(400).json({ error: 'Season not valid' });
   }
 
-  const { start, end } = SEASON_START_END[season];
+  const { start, end } = SEASON_START_END[CURRENT_SEASON.toString()];
 
   try {
     const data = await MatchDataPlayer.find({

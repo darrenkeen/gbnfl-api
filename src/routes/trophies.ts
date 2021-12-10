@@ -1,7 +1,7 @@
 import { Request, Response, Router } from 'express';
 import { SelectQueryBuilder } from 'typeorm';
 import { logger } from '../config/logger';
-import { SEASON_START_END } from '../constants';
+import { CURRENT_SEASON, SEASON_START_END } from '../constants';
 import { Player } from '../entities/Player';
 import { Trophy } from '../entities/Trophy';
 import lastUpdated from '../middleware/lastUpdated';
@@ -66,12 +66,12 @@ const getTrophiesWithMatchBySeasonAndPlayer = async (
   req: Request,
   res: Response
 ) => {
-  const { season, uno } = req.params;
-  if (!SEASON_START_END[season]) {
+  const { uno } = req.params;
+  if (!SEASON_START_END[CURRENT_SEASON.toString()]) {
     return res.status(400).json({ error: 'Season not valid' });
   }
   try {
-    const { start, end } = SEASON_START_END[season];
+    const { start, end } = SEASON_START_END[CURRENT_SEASON.toString()];
     const data = await Trophy.find({
       join: {
         alias: 'trophy',
@@ -113,9 +113,8 @@ const getTrophiesWithMatchBySeasonAndPlayer = async (
 };
 
 const getTrophiesBySeasonForPlayers = async (req: Request, res: Response) => {
-  const { season } = req.params;
   const data: any[] = [];
-  if (!SEASON_START_END[season]) {
+  if (!SEASON_START_END[CURRENT_SEASON.toString()]) {
     return res.status(400).json({ error: 'Season not valid' });
   }
   try {
@@ -124,7 +123,7 @@ const getTrophiesBySeasonForPlayers = async (req: Request, res: Response) => {
     });
 
     players.forEach((player) => {
-      const playerData = getPlayerData(player, season);
+      const playerData = getPlayerData(player, CURRENT_SEASON.toString());
       data.push(playerData);
     });
   } catch (err) {

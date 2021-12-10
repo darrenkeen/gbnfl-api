@@ -1,6 +1,8 @@
 export const __prod__ = process.env.NODE_ENV !== 'production';
 export const COOKIE_NAME = 'GBNFL_AUTH';
 
+export const CURRENT_SEASON = 7;
+
 export const SEASON_START_END: Record<string, { start: number; end: number }> =
   {
     '2': {
@@ -21,7 +23,11 @@ export const SEASON_START_END: Record<string, { start: number; end: number }> =
     },
     '6': {
       start: 1633496401000,
-      end: 1641016800000, // Dummy date for 'Jan 01 2022 06:00:00' as no end time yet...
+      end: 1639008000000,
+    },
+    '7': {
+      start: 1639008001000,
+      end: 1648771200000, // Dummy date for '2022-04-01' as no end time yet...
     },
   };
 
@@ -33,11 +39,13 @@ export const MODE_KEYS: Record<string, string> = {
   br_brtrios: 'BR Trios',
   br_brz_brtrios: 'BR Trios',
   br_brquads: 'BR Quads',
+  br_br_quads: 'BR Quads',
   br_brz_brquads: 'BR Quads',
   br_dbd_dbd: 'Iron Trial Trios',
   br_dbd_iron_trials_solos: 'Iron Trials Solos',
   br_dmz_plnbld: 'Blood Money',
   br_dmz_plunquad: 'Blood Money',
+  br_dmz_plndtrios: 'Blood Money',
   br_reveal_dov: 'Event',
   br_rebirth_rbrthquad: 'Rebirth Quads',
   br_rebirth_rbrthtrios: 'Rebirth Trios',
@@ -57,6 +65,7 @@ export const WITH_RANK_MODE = [
   'br_brtrios',
   'br_brz_brtrios',
   'br_brquads',
+  'br_br_quads',
   'br_brz_brquads',
   'br_dbd_dbd',
   'br_dbd_iron_trials_solos',
@@ -71,6 +80,7 @@ export const NON_SOLO_TROPHY_MODES = [
   'br_brtrios',
   'br_brz_brtrios',
   'br_brquads',
+  'br_br_quads',
   'br_brz_brquads',
   'br_dbd_dbd',
   'br_dbd_iron_trials_solos',
