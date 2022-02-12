@@ -77,6 +77,7 @@ export const WITH_RANK_MODE = [
   'br_brz_brquads',
   'br_dbd_dbd',
   'br_dbd_iron_trials_solos',
+  'br_rebirth_rbrthtrios',
   'br_rebirth_rbrthquad',
   'br_mini_rebirth_mini_royale_duos',
   'br_mini_miniroyale',
