@@ -1,7 +1,7 @@
 export const __prod__ = process.env.NODE_ENV !== 'production';
 export const COOKIE_NAME = 'GBNFL_AUTH';
 
-export const CURRENT_SEASON = 7;
+export const CURRENT_SEASON = 8;
 
 export const SEASON_START_END: Record<string, { start: number; end: number }> =
   {
@@ -27,7 +27,11 @@ export const SEASON_START_END: Record<string, { start: number; end: number }> =
     },
     '7': {
       start: 1639008001000,
-      end: 1648771200000, // Dummy date for '2022-04-01' as no end time yet...
+      end: 1644858000000,
+    },
+    '8': {
+      start: 1644858001000, //  Mon Feb 14 2022 17:00:00 GMT+0000
+      end: 1652482800000, // Dummy date for '2022-05-14' as no end time yet...
     },
   };
 
